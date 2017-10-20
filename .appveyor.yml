@@ -1,0 +1,25 @@
+platform:
+  - x64
+
+environment:
+  nodejs_version: "8"
+
+cache:
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
+  - node_modules
+
+install:
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - set PATH=%APPDATA%\npm;%PATH%
+  - node --version
+  - npm --version
+  - npm install
+  - npm update
+
+test_script:
+  - npm run lint
+  - if %APPVEYOR_REPO_TAG% EQU false npm run make
+
+build_script:
+  - if %APPVEYOR_REPO_TAG% EQU true npm run publish

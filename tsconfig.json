@@ -1,0 +1,19 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "pretty": true,
+    "strict": true,
+    "sourceMap": true,
+    "declaration": true,
+    "importHelpers": true,
+    "noEmitHelpers": true,
+    "preserveConstEnums": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "lib": ["dom", "esnext"]
+  }
+}

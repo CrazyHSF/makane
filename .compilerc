@@ -1,0 +1,37 @@
+{
+  "env": {
+    "development": {
+      "text/typescript": {
+        "target": "es2015",
+        "module": "commonjs",
+        "pretty": true,
+        "strict": true,
+        "declaration": true,
+        "inlineSources": true,
+        "importHelpers": true,
+        "noEmitHelpers": true,
+        "inlineSourceMap": true,
+        "preserveConstEnums": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "suppressImplicitAnyIndexErrors": true
+      }
+    },
+    "production": {
+      "text/typescript": {
+        "target": "es2015",
+        "module": "commonjs",
+        "pretty": true,
+        "strict": true,
+        "sourceMap": false,
+        "declaration": true,
+        "importHelpers": true,
+        "noEmitHelpers": true,
+        "preserveConstEnums": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "suppressImplicitAnyIndexErrors": true
+      }
+    }
+  }
+}

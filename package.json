@@ -1,0 +1,44 @@
+{
+  "name": "makane",
+  "productName": "Makane",
+  "version": "0.0.0",
+  "description": "Electron application",
+  "keywords": [],
+  "license": "MIT",
+  "author": "airt <airtial@gmail.com>",
+  "main": "src/main.ts",
+  "config": {
+    "forge": "./forge.config.js"
+  },
+  "dependencies": {
+    "@angular/common": "^4.0.0",
+    "@angular/compiler": "^4.0.0",
+    "@angular/core": "^4.0.0",
+    "@angular/platform-browser": "^4.0.0",
+    "@angular/platform-browser-dynamic": "^4.0.0",
+    "electron-compile": "^6.0.0",
+    "electron-devtools-installer": "^2.0.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "reflect-metadata": "^0.1.0",
+    "rxjs": "^5.0.0",
+    "tslib": "^1.0.0",
+    "zone.js": "^0.8.0"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.0.0",
+    "babel-preset-env": "^1.0.0",
+    "babel-preset-react": "^6.0.0",
+    "electron-forge": "^4.0.0",
+    "electron-prebuilt-compile": "1.7.9",
+    "tslint": "^5.0.0",
+    "tslint-config-standard": "^6.0.0",
+    "typescript": "^2.0.0"
+  },
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "tslint -p . src"
+  }
+}

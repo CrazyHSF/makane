@@ -1,0 +1,27 @@
+// https://palantir.github.io/tslint/rules/
+// https://github.com/blakeembrey/tslint-config-standard/blob/master/tslint.js
+{
+  "extends": "tslint-config-standard",
+  "rules": {
+    // ↓ additional rules
+    "array-type": [true, "generic"],
+    "indent": [true, "spaces"],
+    "linebreak-style": [true, "LF"],
+    "no-angle-bracket-type-assertion": true,
+    "only-arrow-functions": [true],
+    "prefer-const": [true],
+    // ↓ overridden rules
+    "quotemark": [true, "single", "jsx-double", "avoid-escape"],
+    "space-before-function-paren": [true, {
+      "anonymous": "always",
+      "asyncArrow": "always",
+      "constructor": "never",
+      "method": "never",
+      "named": "never"
+    }],
+    "trailing-comma": [true, {
+      "multiline": "always",
+      "singleline": "never"
+    }]
+  }
+}
