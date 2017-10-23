@@ -9,6 +9,8 @@ export class AppComponent implements OnInit {
 
   readonly name = 'electron-forge'
 
+  readonly versions = process.versions
+
   ngOnInit() {
     console.log('component initialized')
   }

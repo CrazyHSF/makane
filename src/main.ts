@@ -15,7 +15,7 @@ const createMainWindow = async () => {
     width: 800,
   })
 
-  mainWindow.loadURL(`file://${__dirname}/index.html`)
+  mainWindow.loadURL(`file://${__dirname}/view/index.html`)
 
   if (isDevMode) {
     mainWindow.webContents.openDevTools()
