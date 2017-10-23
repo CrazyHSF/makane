@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import { enableLiveReload } from 'electron-compile'
+import * as background from './background'
 
 // Keep a global reference of the window object, if don't, the window will
 // be closed automatically when the JavaScript object is garbage collected
@@ -32,7 +33,10 @@ const createMainWindow = async () => {
 // This method will be called when Electron has finished initialization and
 // is ready to create browser windows
 // Some APIs can only be used after this event occurs
-app.on('ready', createMainWindow)
+app.on('ready', () => {
+  background.initialize()
+  createMainWindow()
+})
 
 app.on('activate', () => {
   // On OS X it is common to re-create a window in the app when the dock icon
@@ -48,6 +52,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+app.on('quit', () => {
+  background.terminate()
 })
 
 // In this file you can include the rest of app's specific main process code
