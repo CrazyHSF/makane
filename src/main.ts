@@ -41,7 +41,7 @@ app.on('ready', () => {
 app.on('activate', () => {
   // On OS X it is common to re-create a window in the app when the dock icon
   // is clicked and there are no other windows open
-  if (mainWindow === undefined) {
+  if (!mainWindow) {
     createMainWindow()
   }
 })

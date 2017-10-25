@@ -5,24 +5,29 @@ export const initialize = async () => {
 
   // -----
 
-  const processHandle = pm.createProcessHandle({
+  const handle = pm.createProcessHandle({
+    name: 'bash-t',
     command: 'bash',
     args: ['test/loop.sh'],
   })
 
-  pm.startProcess(processHandle)
+  pm.startProcess(handle)
 
-  console.log('process pid = ', processHandle.process && processHandle.process.pid)
+  const process = pm.getProcessInstance(handle)
 
-  processHandle.process && processHandle.process.stdout.on('data', (data) => {
+  if (!process) throw new Error(`Process ${handle} start failed`)
+
+  console.log('process pid = ', process.pid)
+
+  process.stdout.on('data', (data) => {
     console.log('[stdout]', data.toString())
   })
 
-  processHandle.process && processHandle.process.stderr.on('data', (data) => {
+  process.stderr.on('data', (data) => {
     console.log('[stderr]', data.toString())
   })
 
-  processHandle.process && processHandle.process.on('close', (code, signal) => {
+  process.on('close', (code, signal) => {
     console.log('[process-close]', code, signal)
   })
 
