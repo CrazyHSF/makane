@@ -1,5 +1,10 @@
 import { v4 as uuid } from 'uuid'
 import { spawn, ChildProcess, SpawnOptions } from 'child_process'
+import * as createDebug from 'debug'
+
+export { SpawnOptions } from 'child_process'
+
+const debug = createDebug('makane:pm')
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
 
@@ -46,12 +51,15 @@ export const createProcessHandle = (options: CreateProcessHandleOptions): Proces
     status: 'uninitialized',
   }
   globalProcessHandles.set(handle, { description })
+  debug('create process handle [%s]', description.name || handle)
   return handle
 }
 
-export const deleteProcessHandle = (handle: ProcessHandle): boolean => {
+export const deleteProcessHandle = (handle: ProcessHandle): void => {
+  const description = getProcessDescription(handle)
   killProcess(handle)
-  return globalProcessHandles.delete(handle)
+  globalProcessHandles.delete(handle)
+  debug('delete process handle [%s]', description.name || handle)
 }
 
 const getProcessValue = (handle: ProcessHandle): ProcessHandleValue => {
@@ -66,7 +74,7 @@ export const getProcessDescription = (handle: ProcessHandle): ProcessDescription
 export const getProcessInstance = (handle: ProcessHandle): ChildProcess | undefined =>
   getProcessValue(handle).process
 
-export const setProcessInstance = (handle: ProcessHandle, process: ChildProcess): void => {
+const setProcessInstance = (handle: ProcessHandle, process: ChildProcess): void => {
   getProcessValue(handle).process = process
 }
 
@@ -78,16 +86,23 @@ export const startProcess = (handle: ProcessHandle): void => {
   description.startTime = Date.now()
   // TODO: process.on
   setProcessInstance(handle, process)
+  debug('start process [%s] -> %d', description.name || handle, process.pid)
 }
 
 const killProcessInstance = (process: ChildProcess): void => {
   if (!process.killed) process.kill()
 }
 
-export const killProcess = (handle: ProcessHandle): void =>
-  u(getProcessInstance(handle), killProcessInstance)
+export const killProcess = (handle: ProcessHandle): void => {
+  const process = getProcessInstance(handle)
+  if (process) {
+    killProcessInstance(process)
+    const description = getProcessDescription(handle)
+    debug('kill process [%s] -> %d', description.name || handle, process.pid)
+  }
+}
 
-export const killProcesses = (handles: Iterable<ProcessHandle>): void => {
+const killProcesses = (handles: Iterable<ProcessHandle>): void => {
   for (const handle of handles) killProcess(handle)
 }
 
