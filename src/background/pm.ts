@@ -29,7 +29,6 @@ export type ProcessDescription = {
   readonly createTime: number
   startTime?: number
   stopTime?: number
-  restartTime?: number
   restartCount: number
   status: ProcessStatus
 }
@@ -47,7 +46,7 @@ export const createProcessHandle = (options: CreateProcessHandleOptions): Proces
     ...options,
     handle,
     createTime: Date.now(),
-    restartCount: 0,
+    restartCount: -1,
     status: 'uninitialized',
   }
   globalProcessHandles.set(handle, { description })
@@ -56,10 +55,10 @@ export const createProcessHandle = (options: CreateProcessHandleOptions): Proces
 }
 
 export const deleteProcessHandle = (handle: ProcessHandle): void => {
-  const description = getProcessDescription(handle)
   killProcess(handle)
+  const processName = getProcessDescription(handle).name
   globalProcessHandles.delete(handle)
-  debug('delete process handle [%s]', description.name || handle)
+  debug('delete process handle [%s]', processName || handle)
 }
 
 const getProcessValue = (handle: ProcessHandle): ProcessHandleValue => {
@@ -84,6 +83,7 @@ export const startProcess = (handle: ProcessHandle): void => {
   const process = spawn(description.command, description.args, description.spawnOptions)
   description.status = 'launching'
   description.startTime = Date.now()
+  description.restartCount += 1
   // TODO: process.on
   setProcessInstance(handle, process)
   debug('start process [%s] -> %d', description.name || handle, process.pid)
@@ -98,6 +98,8 @@ export const killProcess = (handle: ProcessHandle): void => {
   if (process) {
     killProcessInstance(process)
     const description = getProcessDescription(handle)
+    description.status = 'stopping'
+    description.stopTime = Date.now()
     debug('kill process [%s] -> %d', description.name || handle, process.pid)
   }
 }
