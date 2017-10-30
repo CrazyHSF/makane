@@ -1,12 +1,20 @@
 import { NgModule } from '@angular/core'
+import { FormsModule } from '@angular/forms'
 import { BrowserModule } from '@angular/platform-browser'
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
+import { NgZorroAntdModule } from 'ng-zorro-antd'
 import { AppComponent } from './app.component'
-import { PMService } from './pm.service'
+import { AppService } from './app.service'
 
 @NgModule({
-  imports: [BrowserModule],
   declarations: [AppComponent],
-  providers: [PMService],
+  imports: [
+    FormsModule,
+    BrowserModule,
+    BrowserAnimationsModule,
+    NgZorroAntdModule.forRoot(),
+  ],
+  providers: [AppService],
   bootstrap: [AppComponent],
 })
 export class AppModule { }

@@ -1,5 +1,12 @@
+import * as delay from 'delay'
 import { Component, OnInit } from '@angular/core'
-import { PMService } from './pm.service'
+
+import { AppService } from './app.service'
+import { ProcessDescription } from '../background/pm-types'
+
+export type ProcessData = {
+  readonly description: ProcessDescription
+}
 
 @Component({
   selector: 'app',
@@ -8,45 +15,36 @@ import { PMService } from './pm.service'
 })
 export class AppComponent implements OnInit {
 
-  readonly name = 'electron-forge'
+  dataset: Array<ProcessData> = []
 
-  readonly versions = process.versions
-
-  constructor(private pmService: PMService) { }
+  constructor(private service: AppService) { }
 
   ngOnInit() {
+    this.service.ngOnInit()
+    this.dataset = this.service.list().map(description => ({ description }))
     console.log('component initialized')
+  }
 
-    // -----
+  async onClick() {
+    console.log('click..')
 
-    const handle = this.pmService.pm.createProcessHandle({
+    const handle = this.service.create({
       name: 'bash-t',
       command: 'bash',
       args: ['test/loop.sh'],
     })
 
-    this.pmService.pm.startProcess(handle)
+    await delay(1000)
 
-    const process = this.pmService.pm.getProcessInstance(handle)
+    this.service.start(handle)
 
-    if (!process) throw new Error(`Process ${handle} start failed`)
+    await delay(5000)
 
-    console.log('process pid = ', process.pid)
+    this.service.stop(handle)
 
-    process.stdout.on('data', (data) => {
-      console.log('[stdout]', data.toString())
-    })
+    await delay(1000)
 
-    process.stderr.on('data', (data) => {
-      console.log('[stderr]', data.toString())
-    })
-
-    process.on('close', (code, signal) => {
-      console.log('[process-close]', code, signal)
-    })
-
-    // -----
-
+    this.service.remove(handle)
   }
 
 }

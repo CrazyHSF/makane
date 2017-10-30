@@ -1,6 +1,25 @@
 <div>
-  <h2>Welcome to {{name}} Angular</h2>
-  We are using Node {{versions.node}},
-  Chromium {{versions.chrome}},
-  and Electron {{versions.electron}}
+  <button nz-button [nzType]="'primary'" (click)="onClick()">T</button>
+  <nz-table #nzTable [nzDataSource]="dataset" [nzPageSize]="10">
+    <thead nz-thead>
+      <tr>
+        <th nz-th><span>Name</span></th>
+        <th nz-th><span>Command</span></th>
+        <th nz-th><span>Status</span></th>
+        <th nz-th><span>Action</span></th>
+      </tr>
+    </thead>
+    <tbody nz-tbody>
+      <tr nz-tbody-tr *ngFor="let data of nzTable.data">
+        <td nz-td>{{data.description.name}}</td>
+        <td nz-td>{{data.description.command}}</td>
+        <td nz-td>{{data.description.status}}</td>
+        <td nz-td>
+          <span>
+            <a>Action</a>
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
 </div>
