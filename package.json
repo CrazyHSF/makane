@@ -11,17 +11,24 @@
     "forge": "./forge.config.js"
   },
   "dependencies": {
+    "@angular/animations": "^4.0.0",
+    "@angular/cdk": "^2.0.0-beta.12",
     "@angular/common": "^4.0.0",
     "@angular/compiler": "^4.0.0",
     "@angular/core": "^4.0.0",
+    "@angular/forms": "^4.0.0",
     "@angular/platform-browser": "^4.0.0",
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@types/debug": "^0.0.30",
+    "@types/delay": "^2.0.0",
     "@types/uuid": "^3.0.0",
     "debug": "^3.0.0",
+    "delay": "^2.0.0",
     "electron-compile": "^6.0.0",
     "electron-devtools-installer": "^2.0.0",
     "electron-squirrel-startup": "^1.0.0",
+    "moment": "^2.0.0",
+    "ng-zorro-antd": "^0.6.0-rc.2",
     "reflect-metadata": "^0.1.0",
     "rxjs": "^5.0.0",
     "tslib": "^1.0.0",
@@ -35,7 +42,7 @@
     "electron-forge": "^4.0.0",
     "electron-prebuilt-compile": "1.7.9",
     "tslint": "^5.0.0",
-    "tslint-config-standard": "^6.0.0",
+    "tslint-config-standard": "^7.0.0",
     "typescript": "^2.0.0"
   },
   "scripts": {
