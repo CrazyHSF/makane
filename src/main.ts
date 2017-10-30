@@ -1,6 +1,9 @@
+import * as createDebug from 'debug'
 import { app, BrowserWindow } from 'electron'
 import { enableLiveReload } from 'electron-compile'
 import * as background from './background'
+
+const debug = createDebug('makane:main')
 
 // Keep a global reference of the window object, if don't, the window will
 // be closed automatically when the JavaScript object is garbage collected
@@ -34,7 +37,12 @@ const createMainWindow = async () => {
 // is ready to create browser windows
 // Some APIs can only be used after this event occurs
 app.on('ready', () => {
-  background.initialize()
+  background.initialize({
+    sendToRenderer: (channel, ...args) => {
+      if (mainWindow) mainWindow.webContents.send(channel, ...args)
+      // debug('do send %s <> %s', channel, JSON.stringify(args, undefined, 2))
+    }
+  })
   createMainWindow()
 })
 

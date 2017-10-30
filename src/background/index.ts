@@ -1,14 +1,17 @@
 import * as createDebug from 'debug'
 import * as pm from './pm'
 
-const debug = createDebug('makane:background')
+const debug = createDebug('makane:bg')
 
-export const initialize = async () => {
-  debug('initialized')
+export type InitializeOptions = pm.InitializeOptions
+
+export const initialize = async (options: InitializeOptions) => {
+  pm.initialize(options)
   global['pm'] = pm
+  debug('initialized')
 }
 
 export const terminate = async () => {
-  pm.killAllProcesses()
+  pm.terminate()
   debug('terminated')
 }
