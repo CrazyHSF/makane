@@ -1,34 +1,16 @@
 import { v4 as uuid } from 'uuid'
-import { Observable } from 'rxjs'
 import * as createDebug from 'debug'
 import { WebContents } from 'electron'
 import { spawn, ChildProcess, SpawnOptions } from 'child_process'
-import * as constants from '../common/constants'
 
-export { SpawnOptions } from 'child_process'
+import { channels } from '../common/constants'
+import { ProcessDescriptionAction } from '../common/actions'
+import { ProcessHandle, ProcessDescription, ProcessStatus } from '../common/types'
 
 const debug = createDebug('makane:bg:pm')
+const warn = (formatter: string, ...args: Array<{}>) => debug(formatter, ...args)
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
-
-export type ProcessHandle = string
-
-// serializable
-export type ProcessDescription = Readonly<{
-  handle: ProcessHandle
-
-  name?: string
-  command: string
-  args?: Array<string>
-  spawnOptions?: SpawnOptions
-
-  createTime: number
-  startTime?: number
-  stopTime?: number
-  status: ProcessStatus
-}>
-
-export type ProcessStatus = 'uninitialized' | 'launching' | 'online' | 'stopping' | 'stopped' | 'errored'
 
 const un = <A, B>(x: A | undefined, f: (x: A) => B): B | undefined =>
   x === undefined ? undefined : f(x)
@@ -39,9 +21,19 @@ const killProcessInstance = (process?: ChildProcess) => {
 
 export type SendToRenderer = WebContents['send']
 
-let sendToRenderer: SendToRenderer = () => {
-  throw new Error('uninitialized `sendToRenderer`')
-}
+const sender = (() => {
+  let sendToRenderer: SendToRenderer = () => {
+    throw new Error('uninitialized `sendToRenderer`')
+  }
+  return {
+    sendDescriptionMessage: (action: ProcessDescriptionAction) => {
+      sendToRenderer(channels.PROCESS_DESCRIPTION, action)
+    },
+    setSendToRenderer: (send: SendToRenderer) => {
+      sendToRenderer = send
+    },
+  }
+})()
 
 const internal = (() => {
   type ProcessHandleValue = Readonly<{
@@ -53,28 +45,52 @@ const internal = (() => {
     list: (): Array<[ProcessHandle, ProcessHandleValue]> => {
       return Array.from(storage)
     },
-    get: (handle: ProcessHandle): ProcessHandleValue | undefined => {
+    select: (handle: ProcessHandle): ProcessHandleValue | undefined => {
       return storage.get(handle)
     },
-    set: (handle: ProcessHandle, value: ProcessHandleValue) => {
-      un(storage.get(handle), previousValue => {
-        if (!value.process || value.process !== previousValue.process) {
-          killProcessInstance(previousValue.process)
-        }
-      })
+    create: (handle: ProcessHandle, value: ProcessHandleValue) => {
+      const previousValue = storage.get(handle)
+      if (previousValue) {
+        warn('create on existent handle [%s] %o', handle, value)
+        return
+      }
       storage.set(handle, value)
-      sendToRenderer(
-        constants.channels.PROCESS_DESCRIPTION_UPDATE,
-        value.description,
-      )
-      // debug('set process handle [%s] -> %O', value.description.name || handle, value)
+      sender.sendDescriptionMessage({
+        type: 'create',
+        payload: value.description,
+      })
+      debug('create on handle [%s] %o', handle, value)
+    },
+    update: (handle: ProcessHandle, value: ProcessHandleValue) => {
+      const previousValue = storage.get(handle)
+      if (!previousValue) {
+        warn('update on nonexistent handle [%s] %o', handle, value)
+        return
+      }
+      // delete or replace `process`
+      if (!value.process || value.process !== previousValue.process) {
+        killProcessInstance(previousValue.process)
+      }
+      storage.set(handle, value)
+      sender.sendDescriptionMessage({
+        type: 'update',
+        payload: value.description,
+      })
+      debug('update on handle [%s] %o', handle, value)
     },
     remove: (handle: ProcessHandle) => {
-      un(storage.get(handle), v => killProcessInstance(v.process))
-      const name = un(storage.get(handle), v => v.description.name)
+      const previousValue = storage.get(handle)
+      if (!previousValue) {
+        warn('remove on nonexistent handle [%s]', handle)
+        return
+      }
+      killProcessInstance(previousValue.process)
       storage.delete(handle)
-      // TODO: emit event
-      debug('remove process handle [%s]', name || handle)
+      sender.sendDescriptionMessage({
+        type: 'remove',
+        payload: previousValue.description,
+      })
+      debug('remove on handle [%s]', handle)
     },
   }
 })()
@@ -83,11 +99,11 @@ export const list = (): Array<ProcessDescription> =>
   internal.list().map(([handle, { description }]) => description)
 
 export const describe = (handle: ProcessHandle): ProcessDescription | undefined =>
-  un(internal.get(handle), v => v.description)
+  un(internal.select(handle), v => v.description)
 
 const updateDescription = (handle: ProcessHandle, partialDescription: Partial<ProcessDescription>) => {
-  un(internal.get(handle), v => {
-    internal.set(handle, {
+  un(internal.select(handle), v => {
+    internal.update(handle, {
       ...v,
       description: {
         ...v.description,
@@ -105,7 +121,8 @@ const updateStatus = (handle: ProcessHandle, status: ProcessStatus, onlyFromStat
   })
 }
 
-type CreateProcessHandleOptions = Pick<ProcessDescription, 'name' | 'command' | 'args' | 'spawnOptions'>
+type CreateProcessHandleOptions =
+  Pick<ProcessDescription, 'name' | 'command' | 'args' | 'spawnOptions'>
 
 export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
   const handle = uuid()
@@ -115,8 +132,7 @@ export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
     createTime: Date.now(),
     status: 'uninitialized',
   }
-  internal.set(handle, { description })
-  debug('create process handle [%s]', description.name || handle)
+  internal.create(handle, { description })
   return handle
 }
 
@@ -124,11 +140,17 @@ export const remove = internal.remove
 
 export const start = (handle: ProcessHandle): void => {
   const description = describe(handle)
-  if (!description) throw new Error(`No such handle ${handle}`)
-  const process = spawn(description.command, description.args, description.spawnOptions)
-  internal.set(handle, {
+  if (!description) {
+    warn('start on nonexistent handle [%s]', handle)
+    return
+  }
+  const process = spawn(
+    description.command, description.args, description.spawnOptions
+  )
+  internal.update(handle, {
     description: {
       ...description,
+      pid: process.pid,
       startTime: Date.now(),
       status: 'launching',
     },
@@ -136,7 +158,7 @@ export const start = (handle: ProcessHandle): void => {
   })
   // TODO: listeners
   process.addListener('error', (error) => {
-    debug('error of process [%s] : %O', description.name || handle, error)
+    debug('error on handle [%s]: %O', handle, error)
     updateDescription(handle, {
       stopTime: Date.now(),
       status: 'errored',
@@ -154,42 +176,51 @@ export const start = (handle: ProcessHandle): void => {
       status: 'stopped',
     })
   })
-  process.stdout.on('data', (chunk) => {
+  process.stdout.once('data', (chunk) => {
     updateStatus(handle, 'online', 'launching')
-    debug('process [%s] stdout: %O', description.name || handle, String(chunk))
+  })
+  process.stderr.once('data', (chunk) => {
+    updateStatus(handle, 'online', 'launching')
+  })
+  process.stdout.on('data', (chunk) => {
+    debug('stdout on handle [%s]: %o', handle, String(chunk))
   })
   process.stderr.on('data', (chunk) => {
-    updateStatus(handle, 'online', 'launching')
-    debug('process [%s] stderr: %O', description.name || handle, String(chunk))
+    debug('stderr on handle [%s]: %o', handle, String(chunk))
   })
   process.stdout.on('error', (error) => {
-    debug('process [%s] stdout error: %O', description.name || handle, error)
+    debug('error of stdout on handle [%s]: %O', handle, error)
   })
   process.stderr.on('error', (error) => {
-    debug('process [%s] stderr error: %O', description.name || handle, error)
+    debug('error of stderr on handle [%s]: %O', handle, error)
   })
   process.stdout.on('end', () => {
-    debug('process [%s] stdout end', description.name || handle)
+    debug('end of stdout on handle [%s]', handle)
   })
   process.stderr.on('end', () => {
-    debug('process [%s] stderr end', description.name || handle)
+    debug('end of stderr on handle [%s]', handle)
   })
   // -----
-  debug('start process [%s] -> %d', description.name || handle, process.pid)
+  debug('start process (pid = %d) on handle [%s]', process.pid, handle)
 }
 
 export const stop = (handle: ProcessHandle): void => {
-  const value = internal.get(handle)
-  if (!value) throw new Error(`No such handle ${handle}`)
-  const { description, process } = value
-  if (process) {
-    killProcessInstance(process)
-    updateDescription(handle, {
-      stopTime: Date.now(),
-      status: 'stopping',
-    })
-    debug('stop process [%s] -> %d', description.name || handle, process.pid)
+  const value = internal.select(handle)
+  if (!value) {
+    warn('stop on nonexistent handle [%s]', handle)
+    return
   }
+  const { description, process } = value
+  if (!process) {
+    warn('stop uninitialized process on handle [%s]', handle)
+    return
+  }
+  killProcessInstance(process)
+  updateDescription(handle, {
+    stopTime: Date.now(),
+    status: 'stopping',
+  })
+  debug('stop process (pid = %d) on handle [%s]', process.pid, handle)
 }
 
 export type InitializeOptions = {
@@ -197,7 +228,7 @@ export type InitializeOptions = {
 }
 
 export const initialize = (options: InitializeOptions) => {
-  sendToRenderer = options.sendToRenderer
+  sender.setSendToRenderer(options.sendToRenderer)
 }
 
 export const terminate = () => {

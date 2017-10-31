@@ -1,13 +1,25 @@
-import { remote, ipcRenderer } from 'electron'
-import { Injectable, OnInit } from '@angular/core'
+import { Injectable } from '@angular/core'
+import { Observable, Subject } from 'rxjs'
+import { remote, ipcRenderer, Event } from 'electron'
 
-import * as constants from '../common/constants'
-import { PM, ProcessDescription, SpawnOptions } from '../background/pm-types'
+import { PM } from '../background/pm-types'
+import { channels } from '../common/constants'
+import { ProcessDescriptionAction } from '../common/actions'
+import { ProcessDescription, SpawnOptions } from '../common/types'
 
+// docs: <https://electron.atom.io/docs/api/remote/>
 const pm: PM = remote.getGlobal('pm')
 
+const observeIpcMessages = <A>(channel: string) =>
+  new Observable<A>(observer => {
+    const listener = (event: Event, action: A) => observer.next(action)
+    ipcRenderer.on(channel, listener)
+    console.log('`observeIpcMessages` start')
+    return () => ipcRenderer.removeListener(channel, listener)
+  })
+
 @Injectable()
-export class AppService implements OnInit {
+export class AppService {
 
   list = pm.list
 
@@ -21,14 +33,8 @@ export class AppService implements OnInit {
 
   stop = pm.stop
 
-  ngOnInit() {
-    ipcRenderer.on(
-      constants.channels.PROCESS_DESCRIPTION_UPDATE,
-      (event: Event, description: ProcessDescription) => {
-        console.log('process-description-update-event', event, description)
-      },
-    )
-    console.log('service initialized')
-  }
+  observeProcessDescriptionActions =
+    observeIpcMessages<ProcessDescriptionAction>(channels.PROCESS_DESCRIPTION).
+    multicast(() => new Subject()).refCount()
 
 }

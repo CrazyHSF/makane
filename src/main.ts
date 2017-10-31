@@ -39,8 +39,12 @@ const createMainWindow = async () => {
 app.on('ready', () => {
   background.initialize({
     sendToRenderer: (channel, ...args) => {
-      if (mainWindow) mainWindow.webContents.send(channel, ...args)
-      // debug('do send %s <> %s', channel, JSON.stringify(args, undefined, 2))
+      if (mainWindow) {
+        mainWindow.webContents.send(channel, ...args)
+        // debug('send to renderer via channel [%s]: %s', channel, JSON.stringify(args, undefined, 2))
+      } else {
+        // debug('can not send to closed renderer with channel [%s]: %s', channel, JSON.stringify(args, undefined, 2))
+      }
     }
   })
   createMainWindow()
