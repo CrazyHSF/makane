@@ -1,8 +1,11 @@
 import * as delay from 'delay'
+import * as createDebug from 'debug'
 import { Component, OnInit } from '@angular/core'
 
 import { AppService } from './app.service'
 import { ProcessDescription } from '../common/types'
+
+const debug = createDebug('makane:v:c:a')
 
 export type ProcessData = {
   readonly description: ProcessDescription
@@ -22,7 +25,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.dataset = this.service.list().map(description => ({ description }))
     this.handlingProcessDescriptionActions()
-    console.log('component initialized')
+    debug('component initialized')
   }
 
   handlingProcessDescriptionActions() {
@@ -47,15 +50,15 @@ export class AppComponent implements OnInit {
       })
     this.service.observeProcessDescriptionActions.
       subscribe(action => {
-        console.log(
-          'ProcessDescriptionAction:',
+        debug(
+          'receive process description action (type = %s, status = %s, description = %o)',
           action.type, action.payload.status, action.payload,
         )
       })
   }
 
   async onClick() {
-    console.log('clicked')
+    debug('clicked')
 
     const handle = this.service.create({
       name: 'bash-t',

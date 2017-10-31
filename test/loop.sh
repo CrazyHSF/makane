@@ -2,6 +2,6 @@
 
 while true
 do
-  date
+  date '+%Y-%m-%d %H:%M:%S'
   sleep 2
 done

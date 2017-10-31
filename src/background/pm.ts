@@ -7,7 +7,7 @@ import { channels } from '../common/constants'
 import { ProcessDescriptionAction } from '../common/actions'
 import { ProcessHandle, ProcessDescription, ProcessStatus } from '../common/types'
 
-const debug = createDebug('makane:bg:pm')
+const debug = createDebug('makane:b:pm')
 const warn = (formatter: string, ...args: Array<{}>) => debug(formatter, ...args)
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
@@ -51,7 +51,7 @@ const internal = (() => {
     create: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
       if (previousValue) {
-        warn('create on existent handle [%s] %o', handle, value)
+        warn('create on existent handle [%s] %o', handle, value.description)
         return
       }
       storage.set(handle, value)
@@ -59,12 +59,12 @@ const internal = (() => {
         type: 'create',
         payload: value.description,
       })
-      debug('create on handle [%s] %o', handle, value)
+      debug('create on handle [%s] %o', handle, value.description)
     },
     update: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
       if (!previousValue) {
-        warn('update on nonexistent handle [%s] %o', handle, value)
+        warn('update on nonexistent handle [%s] %o', handle, value.description)
         return
       }
       // delete or replace `process`
@@ -76,7 +76,7 @@ const internal = (() => {
         type: 'update',
         payload: value.description,
       })
-      debug('update on handle [%s] %o', handle, value)
+      debug('update on handle [%s] %o', handle, value.description)
     },
     remove: (handle: ProcessHandle) => {
       const previousValue = storage.get(handle)

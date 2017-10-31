@@ -1,7 +1,7 @@
 import * as createDebug from 'debug'
 import * as pm from './pm'
 
-const debug = createDebug('makane:bg')
+const debug = createDebug('makane:b')
 
 export type InitializeOptions = pm.InitializeOptions
 
