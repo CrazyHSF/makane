@@ -1,0 +1,27 @@
+:host ::ng-deep .logo {
+  width: 120px;
+  height: 31px;
+  background: #333;
+  border-radius: 6px;
+  margin: 16px 24px 16px 0;
+  float: left;
+}
+
+:host ::ng-deep .menu {
+  line-height: 64px;
+}
+
+:host .content-container {
+  padding: 24px 50px;
+}
+
+:host .content {
+  background: #fff;
+  min-height: 280px;
+  padding: 24px;
+}
+
+:host .footer {
+  text-align: center;
+  padding-top: 0;
+}

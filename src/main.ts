@@ -13,10 +13,10 @@ const isDevMode = process.execPath.match(/[\\/]electron/)
 
 if (isDevMode) enableLiveReload()
 
-const createMainWindow = async () => {
+const createMainWindow = () => {
   mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800,
+    width: 1280,
+    height: 720,
   })
 
   mainWindow.loadURL(`file://${__dirname}/view/index.html`)

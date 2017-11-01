@@ -3,10 +3,10 @@ import { Injectable } from '@angular/core'
 import { Observable, Subject } from 'rxjs'
 import { remote, ipcRenderer, Event } from 'electron'
 
-import { PM } from '../background/pm-types'
+import { PM } from '../background/pm-type'
 import { channels } from '../common/constants'
 import { ProcessDescriptionAction } from '../common/actions'
-import { ProcessDescription, SpawnOptions } from '../common/types'
+import { SpawnOptions } from '../common/types'
 
 const debug = createDebug('makane:v:s:a')
 
@@ -31,6 +31,8 @@ export class AppService {
   create = pm.create
 
   remove = pm.remove
+
+  restart = pm.start
 
   start = pm.start
 

@@ -23,3 +23,6 @@ export type ProcessDescription = Readonly<{
 export type ProcessStatus =
   'uninitialized' | 'launching' | 'online' |
   'stopping' | 'stopped' | 'errored'
+
+export type CreateProcessHandleOptions =
+  Pick<ProcessDescription, 'name' | 'command' | 'args' | 'spawnOptions'>

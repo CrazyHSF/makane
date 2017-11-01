@@ -1,14 +1,21 @@
 import { v4 as uuid } from 'uuid'
 import * as createDebug from 'debug'
 import { WebContents } from 'electron'
-import { spawn, ChildProcess, SpawnOptions } from 'child_process'
+import { spawn, ChildProcess } from 'child_process'
 
 import { channels } from '../common/constants'
 import { ProcessDescriptionAction } from '../common/actions'
-import { ProcessHandle, ProcessDescription, ProcessStatus } from '../common/types'
+import {
+  ProcessHandle,
+  ProcessDescription,
+  ProcessStatus,
+  CreateProcessHandleOptions,
+  SpawnOptions,
+} from '../common/types'
 
 const debug = createDebug('makane:b:pm')
-const warn = (formatter: string, ...args: Array<{}>) => debug(formatter, ...args)
+const warn = (formatter: string, ...args: Array<{}>) =>
+  debug('WARN: ' + formatter, ...args)
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
 
@@ -51,7 +58,7 @@ const internal = (() => {
     create: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
       if (previousValue) {
-        warn('create on existent handle [%s] %o', handle, value.description)
+        warn('create on existent ph [%s] %o', handle, value.description)
         return
       }
       storage.set(handle, value)
@@ -59,12 +66,12 @@ const internal = (() => {
         type: 'create',
         payload: value.description,
       })
-      debug('create on handle [%s] %o', handle, value.description)
+      debug('create on ph [%s] %o', handle, value.description)
     },
     update: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
       if (!previousValue) {
-        warn('update on nonexistent handle [%s] %o', handle, value.description)
+        warn('update on nonexistent ph [%s] %o', handle, value.description)
         return
       }
       // delete or replace `process`
@@ -76,12 +83,12 @@ const internal = (() => {
         type: 'update',
         payload: value.description,
       })
-      debug('update on handle [%s] %o', handle, value.description)
+      debug('update on ph [%s] %o', handle, value.description)
     },
     remove: (handle: ProcessHandle) => {
       const previousValue = storage.get(handle)
       if (!previousValue) {
-        warn('remove on nonexistent handle [%s]', handle)
+        warn('remove on nonexistent ph [%s]', handle)
         return
       }
       killProcessInstance(previousValue.process)
@@ -90,7 +97,7 @@ const internal = (() => {
         type: 'remove',
         payload: previousValue.description,
       })
-      debug('remove on handle [%s]', handle)
+      debug('remove on ph [%s]', handle)
     },
   }
 })()
@@ -121,9 +128,6 @@ const updateStatus = (handle: ProcessHandle, status: ProcessStatus, onlyFromStat
   })
 }
 
-type CreateProcessHandleOptions =
-  Pick<ProcessDescription, 'name' | 'command' | 'args' | 'spawnOptions'>
-
 export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
   const handle = uuid()
   const description: ProcessDescription = {
@@ -138,10 +142,34 @@ export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
 
 export const remove = internal.remove
 
+export const stop = (handle: ProcessHandle): void => {
+  const value = internal.select(handle)
+  if (!value) {
+    warn('stop on nonexistent ph [%s]', handle)
+    return
+  }
+  const { process } = value
+  if (!process) {
+    warn('stop uninitialized process on ph [%s]', handle)
+    return
+  }
+  // TODO
+  // process.removeAllListeners()
+  // process.stdout.removeAllListeners()
+  // process.stderr.removeAllListeners()
+  killProcessInstance(process)
+  updateDescription(handle, {
+    stopTime: Date.now(),
+    status: 'stopping',
+  })
+  debug('stop process (pid = %d) on ph [%s]', process.pid, handle)
+}
+
 export const start = (handle: ProcessHandle): void => {
+  stop(handle)
   const description = describe(handle)
   if (!description) {
-    warn('start on nonexistent handle [%s]', handle)
+    warn('start on nonexistent ph [%s]', handle)
     return
   }
   const process = spawn(
@@ -158,24 +186,28 @@ export const start = (handle: ProcessHandle): void => {
   })
   // TODO: listeners
   process.addListener('error', (error) => {
-    debug('error on handle [%s]: %O', handle, error)
+    debug('error on ph [%s]: %O', handle, error)
     updateDescription(handle, {
       stopTime: Date.now(),
       status: 'errored',
     })
   })
-  process.addListener('exit', (code, signal) => {
-    updateDescription(handle, {
-      stopTime: Date.now(),
-      status: 'stopped',
-    })
+  process.once('exit', (code, signal) => {
+    if (process.pid === un(describe(handle), d => d.pid)) {
+      updateDescription(handle, {
+        stopTime: Date.now(),
+        status: 'stopped',
+      })
+    }
   })
-  process.addListener('close', (code, signal) => {
-    updateDescription(handle, {
-      stopTime: Date.now(),
-      status: 'stopped',
-    })
-  })
+  // process.once('close', (code, signal) => {
+  //   if (process.pid === un(describe(handle), d => d.pid)) {
+  //     updateDescription(handle, {
+  //       stopTime: Date.now(),
+  //       status: 'stopped',
+  //     })
+  //   }
+  // })
   process.stdout.once('data', (chunk) => {
     updateStatus(handle, 'online', 'launching')
   })
@@ -183,44 +215,25 @@ export const start = (handle: ProcessHandle): void => {
     updateStatus(handle, 'online', 'launching')
   })
   process.stdout.on('data', (chunk) => {
-    debug('stdout on handle [%s]: %o', handle, String(chunk))
+    debug('stdout on ph [%s]: %o', handle, String(chunk))
   })
   process.stderr.on('data', (chunk) => {
-    debug('stderr on handle [%s]: %o', handle, String(chunk))
+    debug('stderr on ph [%s]: %o', handle, String(chunk))
   })
   process.stdout.on('error', (error) => {
-    debug('error of stdout on handle [%s]: %O', handle, error)
+    debug('error of stdout on ph [%s]: %O', handle, error)
   })
   process.stderr.on('error', (error) => {
-    debug('error of stderr on handle [%s]: %O', handle, error)
+    debug('error of stderr on ph [%s]: %O', handle, error)
   })
   process.stdout.on('end', () => {
-    debug('end of stdout on handle [%s]', handle)
+    debug('end of stdout on ph [%s]', handle)
   })
   process.stderr.on('end', () => {
-    debug('end of stderr on handle [%s]', handle)
+    debug('end of stderr on ph [%s]', handle)
   })
   // -----
-  debug('start process (pid = %d) on handle [%s]', process.pid, handle)
-}
-
-export const stop = (handle: ProcessHandle): void => {
-  const value = internal.select(handle)
-  if (!value) {
-    warn('stop on nonexistent handle [%s]', handle)
-    return
-  }
-  const { description, process } = value
-  if (!process) {
-    warn('stop uninitialized process on handle [%s]', handle)
-    return
-  }
-  killProcessInstance(process)
-  updateDescription(handle, {
-    stopTime: Date.now(),
-    status: 'stopping',
-  })
-  debug('stop process (pid = %d) on handle [%s]', process.pid, handle)
+  debug('start process (pid = %d) on ph [%s]', process.pid, handle)
 }
 
 export type InitializeOptions = {
