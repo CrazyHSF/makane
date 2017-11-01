@@ -120,14 +120,6 @@ const updateDescription = (handle: ProcessHandle, partialDescription: Partial<Pr
   })
 }
 
-const updateStatus = (handle: ProcessHandle, status: ProcessStatus, onlyFromStatus?: ProcessStatus) => {
-  un(describe(handle), description => {
-    if (onlyFromStatus && onlyFromStatus !== description.status) return
-    if (status === description.status) return
-    updateDescription(handle, { status })
-  })
-}
-
 export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
   const handle = uuid()
   const description: ProcessDescription = {
@@ -142,31 +134,63 @@ export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
 
 export const remove = internal.remove
 
-export const stop = (handle: ProcessHandle): void => {
+const waitForProcessEnd = (process: ChildProcess) =>
+  new Promise<void>((resolve, reject) => {
+    process.once('error', reject)
+    process.once('exit', resolve)
+  })
+
+const stopAndWait = async (handle: ProcessHandle): Promise<void> => {
   const value = internal.select(handle)
   if (!value) {
     warn('stop on nonexistent ph [%s]', handle)
     return
   }
-  const { process } = value
+  const { description, process } = value
   if (!process) {
     warn('stop uninitialized process on ph [%s]', handle)
     return
   }
-  // TODO
-  // process.removeAllListeners()
-  // process.stdout.removeAllListeners()
-  // process.stderr.removeAllListeners()
+  const shouldWait = ['launching', 'online'].includes(description.status)
+  const waiting = shouldWait ? waitForProcessEnd(process) : undefined
   killProcessInstance(process)
-  updateDescription(handle, {
-    stopTime: Date.now(),
-    status: 'stopping',
-  })
+  updateDescription(handle, { status: 'stopping' })
   debug('stop process (pid = %d) on ph [%s]', process.pid, handle)
+  return waiting
 }
 
-export const start = (handle: ProcessHandle): void => {
-  stop(handle)
+export const stop = (handle: ProcessHandle): void => {
+  stopAndWait(handle).catch(error =>
+    warn('error on stopping ph [%s]: %O', handle, error)
+  )
+}
+
+const updateErroredStatus = (handle: ProcessHandle, pid: number) => {
+  un(describe(handle), description => {
+    if (description.pid === pid) {
+      updateDescription(handle, { stopTime: Date.now(), status: 'errored' })
+    }
+  })
+}
+
+const updateStoppedStatus = (handle: ProcessHandle, pid: number) => {
+  un(describe(handle), description => {
+    if (description.pid === pid) {
+      updateDescription(handle, { stopTime: Date.now(), status: 'stopped' })
+    }
+  })
+}
+
+const updateOnlineStatus = (handle: ProcessHandle) => {
+  un(describe(handle), description => {
+    if (description.status === 'launching') {
+      updateDescription(handle, { status: 'online' })
+    }
+  })
+}
+
+const startAndWait = async (handle: ProcessHandle): Promise<void> => {
+  await stopAndWait(handle)
   const description = describe(handle)
   if (!description) {
     warn('start on nonexistent ph [%s]', handle)
@@ -184,36 +208,18 @@ export const start = (handle: ProcessHandle): void => {
     },
     process,
   })
-  // TODO: listeners
-  process.addListener('error', (error) => {
+  process.on('error', (error) => {
     debug('error on ph [%s]: %O', handle, error)
-    updateDescription(handle, {
-      stopTime: Date.now(),
-      status: 'errored',
-    })
+    updateErroredStatus(handle, process.pid)
   })
-  process.once('exit', (code, signal) => {
-    if (process.pid === un(describe(handle), d => d.pid)) {
-      updateDescription(handle, {
-        stopTime: Date.now(),
-        status: 'stopped',
-      })
-    }
+  process.on('exit', (code, signal) => {
+    debug('exit on ph [%s]: (code = %d, signal = %s)', handle, code, signal)
+    updateStoppedStatus(handle, process.pid)
   })
-  // process.once('close', (code, signal) => {
-  //   if (process.pid === un(describe(handle), d => d.pid)) {
-  //     updateDescription(handle, {
-  //       stopTime: Date.now(),
-  //       status: 'stopped',
-  //     })
-  //   }
-  // })
-  process.stdout.once('data', (chunk) => {
-    updateStatus(handle, 'online', 'launching')
-  })
-  process.stderr.once('data', (chunk) => {
-    updateStatus(handle, 'online', 'launching')
-  })
+  process.stdout.once('data', () => updateOnlineStatus(handle))
+  process.stderr.once('data', () => updateOnlineStatus(handle))
+  // TODO: listeners
+  // ↓↓↓↓↓
   process.stdout.on('data', (chunk) => {
     debug('stdout on ph [%s]: %o', handle, String(chunk))
   })
@@ -232,8 +238,14 @@ export const start = (handle: ProcessHandle): void => {
   process.stderr.on('end', () => {
     debug('end of stderr on ph [%s]', handle)
   })
-  // -----
+  // ↑↑↑↑↑
   debug('start process (pid = %d) on ph [%s]', process.pid, handle)
+}
+
+export const start = (handle: ProcessHandle): void => {
+  startAndWait(handle).catch(error =>
+    warn('error on starting ph [%s]: %O', handle, error)
+  )
 }
 
 export type InitializeOptions = {
