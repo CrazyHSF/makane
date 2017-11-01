@@ -1,5 +1,6 @@
+import { Subscription } from 'rxjs'
 import * as createDebug from 'debug'
-import { Component, OnInit } from '@angular/core'
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'
 
 import { AppService } from './app.service'
 import {
@@ -20,78 +21,66 @@ export type ProcessData = {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
-  dataset: Array<ProcessData> =
-    this.service.list().map(description => ({ description }))
+  dataset: Array<ProcessData> = this.service.list().map(description => ({ description }))
 
-  constructor(private service: AppService) { }
+  private subscription = new Subscription()
+
+  constructor(
+    private service: AppService,
+    private detector: ChangeDetectorRef,
+  ) { }
 
   ngOnInit() {
-    this.handlingProcessDescriptionActions()
+    this.startHandlingProcessDescriptionActions()
     debug('component initialized')
   }
 
-  handlingProcessDescriptionActions() {
-    this.service.observeProcessDescriptionActions.
-      filter(action => action.type === 'create').
-      subscribe(({ payload: description }) => {
-        this.dataset = this.dataset.concat([{ description }])
-        debug('handling create action: %o', description)
-      })
-    this.service.observeProcessDescriptionActions.
-      filter(action => action.type === 'remove').
-      subscribe(({ payload: description }) => {
-        const index = this.dataset.findIndex(d =>
-          d.description.handle !== description.handle
-        )
-        if (index !== -1) this.dataset.splice(index, 1)
-        // this.dataset = this.dataset.filter(d =>
-        //   d.description.handle !== description.handle
-        // )
-        debug('handling remove action: %o', description)
-      })
-    this.service.observeProcessDescriptionActions.
-      filter(action => action.type === 'update').
-      subscribe(({ payload: description }) => {
-        const data = this.dataset.find(d =>
-          d.description.handle !== description.handle
-        )
-        if (data) data.description = description
-        // this.dataset = this.dataset.map(d =>
-        //   d.description.handle !== description.handle ? d : { ...d, description }
-        // )
-        debug('handling update action: %o', description)
-      })
-    this.service.observeProcessDescriptionActions.
-      subscribe(action => {
-        debug(
-          'receive process description action (type = %s, status = %s, description = %o)',
-          action.type, action.payload.status, action.payload,
-        )
-      })
+  ngOnDestroy() {
+    this.subscription.unsubscribe()
   }
 
-  async onClick() {
-    debug('clicked')
+  startHandlingProcessDescriptionActions() {
+    this.subscription.add(
+      this.service.observeProcessDescriptionActions.
+        filter(action => action.type === 'create').
+        subscribe(({ payload: description }) => {
+          this.dataset = this.dataset.concat([{ description }])
+          debug('receive description create action (dataset -> %o): %o', this.dataset, description)
+        })
+    )
+    this.subscription.add(
+      this.service.observeProcessDescriptionActions.
+        filter(action => action.type === 'remove').
+        subscribe(({ payload: description }) => {
+          this.dataset = this.dataset.filter(d =>
+            d.description.handle !== description.handle
+          )
+          debug('receive description remove action (dataset -> %o): %o', this.dataset, description)
+          this.detector.detectChanges()
+        })
+    )
+    this.subscription.add(
+      this.service.observeProcessDescriptionActions.
+        filter(action => action.type === 'update').
+        subscribe(({ payload: description }) => {
+          this.dataset = this.dataset.map(d =>
+            d.description.handle !== description.handle ? d : { ...d, description }
+          )
+          debug('receive description update action (dataset -> %o): %o', this.dataset, description)
+          this.detector.detectChanges()
+        })
+    )
+  }
 
+  onClick() {
+    debug('click..')
     this.onCreate({
       name: 'bash-t',
       command: 'bash',
       args: ['test/loop.sh'],
     })
-
-    // await delay(1000)
-
-    // this.service.start(handle)
-
-    // await delay(5000)
-
-    // this.service.stop(handle)
-
-    // await delay(1000)
-
-    // this.service.remove(handle)
   }
 
   readyToStart(status: ProcessStatus) {

@@ -9,7 +9,7 @@
     <nz-content class="content-container">
       <div class="content">
         <button nz-button [nzType]="'primary'" (click)="onClick()">+</button>
-        <nz-table #nzTable [nzAjaxData]="dataset" [nzPageSize]="10">
+        <nz-table #nzTable [nzDataSource]="dataset" [nzPageSize]="10">
           <thead nz-thead>
             <tr>
               <th nz-th><span>Name</span></th>
