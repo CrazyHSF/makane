@@ -50,6 +50,6 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "tslint -p . src"
+    "lint": "tslint -p . 'src/**/*.ts'"
   }
 }

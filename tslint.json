@@ -7,10 +7,11 @@
     "array-type": [true, "generic"],
     "indent": [true, "spaces"],
     "linebreak-style": [true, "LF"],
-    "no-angle-bracket-type-assertion": true,
+    "no-angle-bracket-type-assertion": [true],
     "only-arrow-functions": [true],
     "prefer-const": [true],
     // ↓ overridden rules
+    "no-unused-variable": [false],
     "quotemark": [true, "single", "jsx-double", "avoid-escape"],
     "space-before-function-paren": [true, {
       "anonymous": "always",
