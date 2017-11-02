@@ -161,7 +161,7 @@ const stopAndWait = async (handle: ProcessHandle): Promise<void> => {
 
 export const stop = (handle: ProcessHandle): void => {
   stopAndWait(handle).catch(error =>
-    warn('error on stopping ph [%s]: %O', handle, error)
+    warn('error while stopping ph [%s]: %O', handle, error)
   )
 }
 
@@ -190,7 +190,9 @@ const updateOnlineStatus = (handle: ProcessHandle) => {
 }
 
 const startAndWait = async (handle: ProcessHandle): Promise<void> => {
-  await stopAndWait(handle)
+  await stopAndWait(handle).catch(error =>
+    warn('error while stopping ph [%s]: %O', handle, error)
+  )
   const description = describe(handle)
   if (!description) {
     warn('start on nonexistent ph [%s]', handle)
@@ -244,7 +246,7 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
 
 export const start = (handle: ProcessHandle): void => {
   startAndWait(handle).catch(error =>
-    warn('error on starting ph [%s]: %O', handle, error)
+    warn('error while starting ph [%s]: %O', handle, error)
   )
 }
 
