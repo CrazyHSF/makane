@@ -9,7 +9,7 @@ import {
   ProcessHandle,
   ProcessDescription,
   ProcessStatus,
-  CreateProcessHandleOptions,
+  CreateProcessOptions,
   SpawnOptions,
 } from '../common/types'
 
@@ -18,6 +18,8 @@ const warn = (formatter: string, ...args: Array<{}>) =>
   debug('WARN: ' + formatter, ...args)
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
+
+const now = () => Math.floor(Date.now() / 1000)
 
 const un = <A, B>(x: A | undefined, f: (x: A) => B): B | undefined =>
   x === undefined ? undefined : f(x)
@@ -120,12 +122,12 @@ const updateDescription = (handle: ProcessHandle, partialDescription: Partial<Pr
   })
 }
 
-export const create = (options: CreateProcessHandleOptions): ProcessHandle => {
+export const create = (options: CreateProcessOptions): ProcessHandle => {
   const handle = uuid()
   const description: ProcessDescription = {
     ...options,
     handle,
-    createTime: Date.now(),
+    createTime: now(),
     status: 'uninitialized',
   }
   internal.create(handle, { description })
@@ -168,7 +170,7 @@ export const stop = (handle: ProcessHandle): void => {
 const updateErroredStatus = (handle: ProcessHandle, pid: number) => {
   un(describe(handle), description => {
     if (description.pid === pid) {
-      updateDescription(handle, { stopTime: Date.now(), status: 'errored' })
+      updateDescription(handle, { stopTime: now(), status: 'errored' })
     }
   })
 }
@@ -176,7 +178,7 @@ const updateErroredStatus = (handle: ProcessHandle, pid: number) => {
 const updateStoppedStatus = (handle: ProcessHandle, pid: number) => {
   un(describe(handle), description => {
     if (description.pid === pid) {
-      updateDescription(handle, { stopTime: Date.now(), status: 'stopped' })
+      updateDescription(handle, { stopTime: now(), status: 'stopped' })
     }
   })
 }
@@ -205,7 +207,7 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
     description: {
       ...description,
       pid: process.pid,
-      startTime: Date.now(),
+      startTime: now(),
       status: 'launching',
     },
     process,

@@ -24,5 +24,5 @@ export type ProcessStatus =
   'uninitialized' | 'launching' | 'online' |
   'stopping' | 'stopped' | 'errored'
 
-export type CreateProcessHandleOptions =
+export type CreateProcessOptions =
   Pick<ProcessDescription, 'name' | 'command' | 'args' | 'spawnOptions'>

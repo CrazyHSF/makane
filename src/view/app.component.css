@@ -11,17 +11,25 @@
   line-height: 64px;
 }
 
-:host .content-container {
+.content-container {
   padding: 24px 50px;
 }
 
-:host .content {
+.content {
   background: #fff;
   min-height: 280px;
   padding: 24px;
 }
 
-:host .footer {
+.table-operations {
+  margin-bottom: 16px;
+}
+
+.table-operations>button {
+  margin-right: 8px;
+}
+
+.footer {
   text-align: center;
   padding-top: 0;
 }

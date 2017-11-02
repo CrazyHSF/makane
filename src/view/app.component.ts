@@ -1,19 +1,20 @@
+import * as delay from 'delay'
 import { Subscription } from 'rxjs'
 import * as createDebug from 'debug'
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core'
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
 
 import { AppService } from './app.service'
 import {
   ProcessHandle,
   ProcessDescription,
   ProcessStatus,
-  CreateProcessHandleOptions,
+  CreateProcessOptions,
 } from '../common/types'
 
 const debug = createDebug('makane:v:c:a')
 
-export type ProcessData = {
-  description: ProcessDescription
+export type ProcessViewRow = {
+  readonly description: ProcessDescription
 }
 
 @Component({
@@ -23,22 +24,34 @@ export type ProcessData = {
 })
 export class AppComponent implements OnInit, OnDestroy {
 
-  dataset: Array<ProcessData> = this.service.list().map(description => ({ description }))
+  dataset: Array<ProcessViewRow> = []
+
+  loading: boolean = false
+
+  pageIndex: number = 1
+
+  pageSize: number = 6
 
   private subscription = new Subscription()
 
   constructor(
+    private zone: NgZone,
     private service: AppService,
-    private detector: ChangeDetectorRef,
+    public detector: ChangeDetectorRef,
   ) { }
 
   ngOnInit() {
     this.startHandlingProcessDescriptionActions()
+    this.reload()
     debug('component initialized')
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe()
+  }
+
+  reload() {
+    this.dataset = this.service.list().map(description => ({ description }))
   }
 
   startHandlingProcessDescriptionActions() {
@@ -54,22 +67,26 @@ export class AppComponent implements OnInit, OnDestroy {
       this.service.observeProcessDescriptionActions.
         filter(action => action.type === 'remove').
         subscribe(({ payload: description }) => {
-          this.dataset = this.dataset.filter(d =>
-            d.description.handle !== description.handle
+          this.dataset = this.dataset.filter(row =>
+            row.description.handle !== description.handle
           )
+          const maxPageIndex = Math.ceil(this.dataset.length / this.pageSize)
+          if (this.pageIndex > maxPageIndex) {
+            this.pageIndex = Math.max(0, this.pageIndex - 1)
+          }
           debug('receive description remove action (dataset -> %o): %o', this.dataset, description)
-          this.detector.detectChanges()
         })
     )
     this.subscription.add(
       this.service.observeProcessDescriptionActions.
         filter(action => action.type === 'update').
         subscribe(({ payload: description }) => {
-          this.dataset = this.dataset.map(d =>
-            d.description.handle !== description.handle ? d : { ...d, description }
-          )
+          this.zone.run(() => {
+            this.dataset = this.dataset.map(row =>
+              row.description.handle !== description.handle ? row : { ...row, description }
+            )
+          })
           debug('receive description update action (dataset -> %o): %o', this.dataset, description)
-          this.detector.detectChanges()
         })
     )
   }
@@ -83,21 +100,13 @@ export class AppComponent implements OnInit, OnDestroy {
     })
   }
 
-  readyToStart(status: ProcessStatus) {
-    const readyToStartStatus: Array<ProcessStatus> = [
-      'uninitialized', 'stopping', 'stopped', 'errored',
-    ]
-    return readyToStartStatus.includes(status)
+  onReload() {
+    this.reload()
+    this.loading = true
+    delay(200).then(() => this.loading = false).catch(ignored => ignored)
   }
 
-  readyToStop(status: ProcessStatus) {
-    const readyToStopStatus: Array<ProcessStatus> = [
-      'launching', 'online',
-    ]
-    return readyToStopStatus.includes(status)
-  }
-
-  onCreate(options: CreateProcessHandleOptions) {
+  onCreate(options: CreateProcessOptions) {
     this.service.create(options)
   }
 
@@ -115,6 +124,20 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onStop(handle: ProcessHandle) {
     this.service.stop(handle)
+  }
+
+  isOnline(status: ProcessStatus) {
+    const statuses: Array<ProcessStatus> = [
+      'launching', 'online',
+    ]
+    return statuses.includes(status)
+  }
+
+  isOffline(status: ProcessStatus) {
+    const statuses: Array<ProcessStatus> = [
+      'uninitialized', 'stopping', 'stopped', 'errored',
+    ]
+    return statuses.includes(status)
   }
 
 }
