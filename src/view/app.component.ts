@@ -1,6 +1,7 @@
 import * as delay from 'delay'
 import { Subscription } from 'rxjs'
 import * as createDebug from 'debug'
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
 
 import { AppService } from './app.service'
@@ -17,6 +18,13 @@ export type ProcessViewRow = {
   readonly description: ProcessDescription
 }
 
+const emptyOptions = (): CreateProcessOptions => ({
+  name: '',
+  command: '',
+  args: [],
+  spawnOptions: {},
+})
+
 @Component({
   selector: 'app',
   templateUrl: './app.component.html',
@@ -32,12 +40,19 @@ export class AppComponent implements OnInit, OnDestroy {
 
   pageSize: number = 6
 
+  isCreateModalVisible: boolean = false
+
+  options: CreateProcessOptions = emptyOptions()
+
+  validateForm: FormGroup = this.buildFormGroup()
+
   private subscription = new Subscription()
 
   constructor(
-    private zone: NgZone,
     private service: AppService,
     public detector: ChangeDetectorRef,
+    private zone: NgZone,
+    private formBuilder: FormBuilder,
   ) { }
 
   ngOnInit() {
@@ -52,6 +67,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   reload() {
     this.dataset = this.service.list().map(description => ({ description }))
+  }
+
+  buildFormGroup(): FormGroup {
+    return this.formBuilder.group({
+      name: [undefined, [Validators.required]],
+      command: [undefined, [Validators.required]],
+    })
   }
 
   startHandlingProcessDescriptionActions() {
@@ -93,7 +115,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onClick() {
     debug('click..')
-    this.onCreate({
+    this.service.create({
       name: 'bash-t',
       command: 'bash',
       args: ['test/loop.sh'],
@@ -106,8 +128,19 @@ export class AppComponent implements OnInit, OnDestroy {
     delay(200).then(() => this.loading = false).catch(ignored => ignored)
   }
 
-  onCreate(options: CreateProcessOptions) {
-    this.service.create(options)
+  onPrepareCreate() {
+    this.validateForm = this.buildFormGroup()
+    this.isCreateModalVisible = true
+  }
+
+  onCancelCreate() {
+    debug('onCancelCreate')
+    this.isCreateModalVisible = false
+  }
+
+  onCreate() {
+    debug('onCreate %o', this.validateForm)
+    this.isCreateModalVisible = false
   }
 
   onRemove(handle: ProcessHandle) {
@@ -126,14 +159,14 @@ export class AppComponent implements OnInit, OnDestroy {
     this.service.stop(handle)
   }
 
-  isOnline(status: ProcessStatus) {
+  isOnline(status: ProcessStatus): boolean {
     const statuses: Array<ProcessStatus> = [
       'launching', 'online',
     ]
     return statuses.includes(status)
   }
 
-  isOffline(status: ProcessStatus) {
+  isOffline(status: ProcessStatus): boolean {
     const statuses: Array<ProcessStatus> = [
       'uninitialized', 'stopping', 'stopped', 'errored',
     ]

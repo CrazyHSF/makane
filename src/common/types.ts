@@ -9,9 +9,9 @@ export type ProcessDescription = Readonly<{
   handle: ProcessHandle
   pid?: number
 
-  name?: string
+  name: string
   command: string
-  args?: Array<string>
+  args: Array<string>
   spawnOptions?: SpawnOptions
 
   createTime: number

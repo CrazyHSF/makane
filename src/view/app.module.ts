@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core'
-import { FormsModule } from '@angular/forms'
 import { BrowserModule } from '@angular/platform-browser'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { NgZorroAntdModule, NZ_LOCALE, enUS } from 'ng-zorro-antd'
 import { MomentModule } from 'angular2-moment'
@@ -15,6 +15,7 @@ const NgZorroLocale = { provide: NZ_LOCALE, useValue: enUS }
     FormsModule,
     MomentModule,
     BrowserModule,
+    ReactiveFormsModule,
     BrowserAnimationsModule,
     NgZorroAntdModule.forRoot(),
   ],

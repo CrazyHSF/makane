@@ -11,10 +11,41 @@
         <button nz-button [nzType]="'default'" [nzShape]="'circle'" [nzLoading]="loading" (click)="onReload()">
           <i class="anticon anticon-reload"></i>
         </button>
-        <button nz-button [nzType]="'default'" (click)="onClick()">
+        <button nz-button [nzType]="'default'" (click)="onPrepareCreate()">
           Create
         </button>
+        <button nz-button [nzType]="'default'" (click)="onClick()">
+          TC
+        </button>
       </div>
+      <nz-modal [nzTitle]="'Create Process Modal'" [nzVisible]="isCreateModalVisible" [nzContent]="modalContent" (nzOnCancel)="onCancelCreate()" (nzOnOk)="onCreate()">
+        <ng-template #modalContent>
+          <form nz-form class="create-form" [formGroup]="validateForm" (ngSubmit)="onCreate()">
+            <div nz-form-item nz-row>
+              <div nz-form-label nz-col [nzSm]="6" [nzXs]="24">
+                <label for="name" nz-form-item-required>Name</label>
+              </div>
+              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="validateForm.controls['name']">
+                <nz-input formControlName="name" [nzId]="'name'"></nz-input>
+                <div nz-form-explain *ngIf="validateForm.controls['name'].dirty && validateForm.controls['name'].hasError('required')">
+                  Please input the name
+                </div>
+              </div>
+            </div>
+            <div nz-form-item nz-row>
+              <div nz-form-label nz-col [nzSm]="6" [nzXs]="24">
+                <label for="command" nz-form-item-required>Command</label>
+              </div>
+              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="validateForm.controls['command']">
+                <nz-input formControlName="command" [nzId]="'command'"></nz-input>
+                <div nz-form-explain *ngIf="validateForm.controls['command'].dirty && validateForm.controls['command'].hasError('required')">
+                  Please input the command
+                </div>
+              </div>
+            </div>
+          </form>
+        </ng-template>
+      </nz-modal>
       <nz-table #nzTable [nzDataSource]="dataset" [(nzPageIndex)]="pageIndex" (nzPageIndexChange)="detector.detectChanges()" [(nzPageSize)]="pageSize" [nzLoading]="loading">
         <thead nz-thead>
           <tr>
