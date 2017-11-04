@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs'
 import * as createDebug from 'debug'
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
+import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
 import { AppService } from './app.service'
 import {
@@ -14,16 +15,17 @@ import {
 
 const debug = createDebug('makane:v:c:a')
 
+const count = (() => {
+  let c = 0
+  return () => {
+    c += 1
+    return c
+  }
+})()
+
 export type ProcessViewRow = {
   readonly description: ProcessDescription
 }
-
-const emptyOptions = (): CreateProcessOptions => ({
-  name: '',
-  command: '',
-  args: [],
-  spawnOptions: {},
-})
 
 @Component({
   selector: 'app',
@@ -32,7 +34,7 @@ const emptyOptions = (): CreateProcessOptions => ({
 })
 export class AppComponent implements OnInit, OnDestroy {
 
-  dataset: Array<ProcessViewRow> = []
+  dataset: ReadonlyArray<ProcessViewRow> = []
 
   loading: boolean = false
 
@@ -42,9 +44,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   isCreateModalVisible: boolean = false
 
-  options: CreateProcessOptions = emptyOptions()
+  optionsForm: FormGroup
 
-  validateForm: FormGroup = this.buildFormGroup()
+  optionsArgsFormControlNames: ReadonlyArray<string>
 
   private subscription = new Subscription()
 
@@ -53,6 +55,8 @@ export class AppComponent implements OnInit, OnDestroy {
     public detector: ChangeDetectorRef,
     private zone: NgZone,
     private formBuilder: FormBuilder,
+    private message: NzMessageService,
+    private notification: NzNotificationService,
   ) { }
 
   ngOnInit() {
@@ -76,6 +80,19 @@ export class AppComponent implements OnInit, OnDestroy {
     })
   }
 
+  addArgsFormField(event?: MouseEvent) {
+    if (event) event.preventDefault()
+    const name = `args-${count()}`
+    this.optionsArgsFormControlNames = this.optionsArgsFormControlNames.concat([name])
+    this.optionsForm.addControl(name, new FormControl(undefined, Validators.required))
+  }
+
+  detachArgFormField(name: string, event?: MouseEvent) {
+    if (event) event.preventDefault()
+    this.optionsArgsFormControlNames = this.optionsArgsFormControlNames.filter(n => n !== name)
+    this.optionsForm.removeControl(name)
+  }
+
   startHandlingProcessDescriptionActions() {
     this.subscription.add(
       this.service.observeProcessDescriptionActions.
@@ -94,7 +111,7 @@ export class AppComponent implements OnInit, OnDestroy {
           )
           const maxPageIndex = Math.ceil(this.dataset.length / this.pageSize)
           if (this.pageIndex > maxPageIndex) {
-            this.pageIndex = Math.max(0, this.pageIndex - 1)
+            this.pageIndex = Math.max(1, this.pageIndex - 1)
           }
           debug('receive description remove action (dataset -> %o): %o', this.dataset, description)
         })
@@ -114,7 +131,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onClick() {
-    debug('click..')
+    debug('creating test process..')
     this.service.create({
       name: 'bash-t',
       command: 'bash',
@@ -129,7 +146,8 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onPrepareCreate() {
-    this.validateForm = this.buildFormGroup()
+    this.optionsForm = this.buildFormGroup()
+    this.optionsArgsFormControlNames = []
     this.isCreateModalVisible = true
   }
 
@@ -139,8 +157,20 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onCreate() {
-    debug('onCreate %o', this.validateForm)
-    this.isCreateModalVisible = false
+    debug('onCreate %o', this.optionsForm)
+    if (this.optionsForm.invalid) {
+      this.message.warning(`Can't create process: invalid input`)
+    } else {
+      const options: CreateProcessOptions = {
+        name: this.optionsForm.value.name,
+        command: this.optionsForm.value.command,
+        args: this.optionsArgsFormControlNames.map(n => this.optionsForm.value[n]),
+      }
+      this.notification.success('Success', 'Create process successfully')
+      debug('options: %o', options)
+      this.service.create(options)
+      this.isCreateModalVisible = false
+    }
   }
 
   onRemove(handle: ProcessHandle) {

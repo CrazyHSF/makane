@@ -20,14 +20,14 @@
       </div>
       <nz-modal [nzTitle]="'Create Process Modal'" [nzVisible]="isCreateModalVisible" [nzContent]="modalContent" (nzOnCancel)="onCancelCreate()" (nzOnOk)="onCreate()">
         <ng-template #modalContent>
-          <form nz-form class="create-form" [formGroup]="validateForm" (ngSubmit)="onCreate()">
+          <form nz-form class="create-form" *ngIf="optionsForm" [formGroup]="optionsForm" (ngSubmit)="onCreate()">
             <div nz-form-item nz-row>
               <div nz-form-label nz-col [nzSm]="6" [nzXs]="24">
                 <label for="name" nz-form-item-required>Name</label>
               </div>
-              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="validateForm.controls['name']">
+              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="optionsForm.controls['name']">
                 <nz-input formControlName="name" [nzId]="'name'"></nz-input>
-                <div nz-form-explain *ngIf="validateForm.controls['name'].dirty && validateForm.controls['name'].hasError('required')">
+                <div nz-form-explain *ngIf="optionsForm.controls['name'].dirty && optionsForm.controls['name'].hasError('required')">
                   Please input the name
                 </div>
               </div>
@@ -36,11 +36,31 @@
               <div nz-form-label nz-col [nzSm]="6" [nzXs]="24">
                 <label for="command" nz-form-item-required>Command</label>
               </div>
-              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="validateForm.controls['command']">
+              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="optionsForm.controls['command']">
                 <nz-input formControlName="command" [nzId]="'command'"></nz-input>
-                <div nz-form-explain *ngIf="validateForm.controls['command'].dirty && validateForm.controls['command'].hasError('required')">
+                <div nz-form-explain *ngIf="optionsForm.controls['command'].dirty && optionsForm.controls['command'].hasError('required')">
                   Please input the command
                 </div>
+              </div>
+            </div>
+            <div nz-form-item nz-row *ngFor="let argsFormControlName of optionsArgsFormControlNames; let i = index">
+              <div nz-form-label nz-col [nzSpan]="6" *ngIf="i === 0">
+                <label [attr.for]="argsFormControlName">Arguments</label>
+              </div>
+              <div nz-form-control nz-col [nzSpan]="14" [nzOffset]="i === 0 ? 0 : 6" [nzValidateStatus]="optionsForm.controls[argsFormControlName]">
+                <nz-input style="width: 90%; margin-right: 10px" [formControlName]="argsFormControlName" [nzId]="argsFormControlName"></nz-input>
+                <i class="anticon anticon-minus-circle-o dynamic-delete-button" (click)="detachArgFormField(argsFormControlName, $event)"></i>
+                <div nz-form-explain *ngIf="optionsForm.controls[argsFormControlName]?.dirty && optionsForm.controls[argsFormControlName]?.hasError('required')">
+                  Please input the argument or delete this field
+                </div>
+              </div>
+            </div>
+            <div nz-form-item nz-row>
+              <div nz-form-control nz-col [nzSpan]="14" [nzOffset]="6">
+                <button nz-button style="width: 90%" [nzType]="'dashed'" (click)="addArgsFormField($event)">
+                  <i class="anticon anticon-plus"></i>
+                  <span>Add argument</span>
+                </button>
               </div>
             </div>
           </form>
