@@ -6,12 +6,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angula
 import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
 import { AppService } from './app.service'
-import {
-  ProcessHandle,
-  ProcessDescription,
-  ProcessStatus,
-  CreateProcessOptions,
-} from '../common/types'
+import { ProcessViewRow } from './processes-table.component'
+import { CreateProcessOptions } from '../common/types'
 
 const debug = createDebug('makane:v:c:a')
 
@@ -22,10 +18,6 @@ const count = (() => {
     return c
   }
 })()
-
-export type ProcessViewRow = {
-  readonly description: ProcessDescription
-}
 
 @Component({
   selector: 'app',
@@ -106,13 +98,13 @@ export class AppComponent implements OnInit, OnDestroy {
       this.service.observeProcessDescriptionActions.
         filter(action => action.type === 'remove').
         subscribe(({ payload: description }) => {
-          this.dataset = this.dataset.filter(row =>
-            row.description.handle !== description.handle
-          )
-          const maxPageIndex = Math.ceil(this.dataset.length / this.pageSize)
-          if (this.pageIndex > maxPageIndex) {
-            this.pageIndex = Math.max(1, this.pageIndex - 1)
-          }
+          this.zone.run(() => {
+            this.dataset = this.dataset.filter(row =>
+              row.description.handle !== description.handle
+            )
+            const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
+            if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
+          })
           debug('receive description remove action (dataset -> %o): %o', this.dataset, description)
         })
     )
@@ -171,36 +163,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.service.create(options)
       this.isCreateModalVisible = false
     }
-  }
-
-  onRemove(handle: ProcessHandle) {
-    this.service.remove(handle)
-  }
-
-  onRestart(handle: ProcessHandle) {
-    this.service.restart(handle)
-  }
-
-  onStart(handle: ProcessHandle) {
-    this.service.start(handle)
-  }
-
-  onStop(handle: ProcessHandle) {
-    this.service.stop(handle)
-  }
-
-  isOnline(status: ProcessStatus): boolean {
-    const statuses: Array<ProcessStatus> = [
-      'launching', 'online',
-    ]
-    return statuses.includes(status)
-  }
-
-  isOffline(status: ProcessStatus): boolean {
-    const statuses: Array<ProcessStatus> = [
-      'uninitialized', 'stopping', 'stopped', 'errored',
-    ]
-    return statuses.includes(status)
   }
 
 }
