@@ -1,7 +1,7 @@
 module.exports = {
   make_targets: {
     darwin: ["zip"],
-    linux: ["deb", "rpm"],
+    linux: ["zip"],
     win32: ["squirrel"],
   },
   electronPackagerConfig: {
