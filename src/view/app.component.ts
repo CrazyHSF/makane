@@ -1,5 +1,4 @@
 import * as delay from 'delay'
-import { Subscription } from 'rxjs'
 import * as createDebug from 'debug'
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
@@ -40,8 +39,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   optionsArgsFormControlNames: ReadonlyArray<string>
 
-  private subscription = new Subscription()
-
   constructor(
     private service: AppService,
     public detector: ChangeDetectorRef,
@@ -52,13 +49,14 @@ export class AppComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.startHandlingProcessDescriptionActions()
+    this.service.startObservingIpcMessages()
+    this.startHandlingProcessDescriptionMessages()
     this.reload()
     debug('component initialized')
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe()
+    this.service.stopObservingIpcMessages()
   }
 
   reload() {
@@ -85,44 +83,35 @@ export class AppComponent implements OnInit, OnDestroy {
     this.optionsForm.removeControl(name)
   }
 
-  startHandlingProcessDescriptionActions() {
-    this.subscription.add(
-      this.service.observeProcessDescriptionActions.
-        filter(action => action.type === 'create').
-        subscribe(({ payload: description }) => {
-          this.dataset = this.dataset.concat([{ description }])
-          debug('receive description create action (dataset -> %o): %o', this.dataset, description)
+  startHandlingProcessDescriptionMessages() {
+    this.service.observeProcessDescriptionCreateMessages.
+      subscribe(description => {
+        this.dataset = this.dataset.concat([{ description }])
+        debug('receive description create message (dataset -> %o): %o', this.dataset, description)
+      })
+    this.service.observeProcessDescriptionRemoveMessages.
+      subscribe(description => {
+        this.zone.run(() => {
+          this.dataset = this.dataset.filter(row =>
+            row.description.handle !== description.handle
+          )
+          const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
+          if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
         })
-    )
-    this.subscription.add(
-      this.service.observeProcessDescriptionActions.
-        filter(action => action.type === 'remove').
-        subscribe(({ payload: description }) => {
-          this.zone.run(() => {
-            this.dataset = this.dataset.filter(row =>
-              row.description.handle !== description.handle
-            )
-            const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
-            if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
-          })
-          debug('receive description remove action (dataset -> %o): %o', this.dataset, description)
+        debug('receive description remove message (dataset -> %o): %o', this.dataset, description)
+      })
+    this.service.observeProcessDescriptionUpdateMessages.
+      subscribe(description => {
+        this.zone.run(() => {
+          this.dataset = this.dataset.map(row =>
+            row.description.handle !== description.handle ? row : { ...row, description }
+          )
         })
-    )
-    this.subscription.add(
-      this.service.observeProcessDescriptionActions.
-        filter(action => action.type === 'update').
-        subscribe(({ payload: description }) => {
-          this.zone.run(() => {
-            this.dataset = this.dataset.map(row =>
-              row.description.handle !== description.handle ? row : { ...row, description }
-            )
-          })
-          debug('receive description update action (dataset -> %o): %o', this.dataset, description)
-        })
-    )
+        debug('receive description update message (dataset -> %o): %o', this.dataset, description)
+      })
   }
 
-  onClick() {
+  onTClick() {
     debug('creating test process..')
     this.service.create({
       name: 'bash-t',

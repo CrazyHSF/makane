@@ -1,14 +1,11 @@
 import { v4 as uuid } from 'uuid'
 import * as createDebug from 'debug'
-import { WebContents } from 'electron'
 import { spawn, ChildProcess } from 'child_process'
 
-import { channels } from '../common/constants'
-import { ProcessDescriptionAction } from '../common/actions'
+import * as sender from './sender'
 import {
   ProcessHandle,
   ProcessDescription,
-  ProcessStatus,
   CreateProcessOptions,
   SpawnOptions,
 } from '../common/types'
@@ -27,22 +24,6 @@ const un = <A, B>(x: A | undefined, f: (x: A) => B): B | undefined =>
 const killProcessInstance = (process?: ChildProcess) => {
   if (process && !process.killed) process.kill()
 }
-
-export type SendToRenderer = WebContents['send']
-
-const sender = (() => {
-  let sendToRenderer: SendToRenderer = () => {
-    throw new Error('uninitialized `sendToRenderer`')
-  }
-  return {
-    sendDescriptionMessage: (action: ProcessDescriptionAction) => {
-      sendToRenderer(channels.PROCESS_DESCRIPTION, action)
-    },
-    setSendToRenderer: (send: SendToRenderer) => {
-      sendToRenderer = send
-    },
-  }
-})()
 
 const internal = (() => {
   type ProcessHandleValue = Readonly<{
@@ -64,11 +45,19 @@ const internal = (() => {
         return
       }
       storage.set(handle, value)
-      sender.sendDescriptionMessage({
-        type: 'create',
-        payload: value.description,
-      })
+      sender.sendProcessDescriptionCreateMessage(value.description)
       debug('create on ph [%s] %o', handle, value.description)
+    },
+    remove: (handle: ProcessHandle) => {
+      const previousValue = storage.get(handle)
+      if (!previousValue) {
+        warn('remove on nonexistent ph [%s]', handle)
+        return
+      }
+      killProcessInstance(previousValue.process)
+      storage.delete(handle)
+      sender.sendProcessDescriptionRemoveMessage(previousValue.description)
+      debug('remove on ph [%s]', handle)
     },
     update: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
@@ -81,25 +70,8 @@ const internal = (() => {
         killProcessInstance(previousValue.process)
       }
       storage.set(handle, value)
-      sender.sendDescriptionMessage({
-        type: 'update',
-        payload: value.description,
-      })
+      sender.sendProcessDescriptionUpdateMessage(value.description)
       debug('update on ph [%s] %o', handle, value.description)
-    },
-    remove: (handle: ProcessHandle) => {
-      const previousValue = storage.get(handle)
-      if (!previousValue) {
-        warn('remove on nonexistent ph [%s]', handle)
-        return
-      }
-      killProcessInstance(previousValue.process)
-      storage.delete(handle)
-      sender.sendDescriptionMessage({
-        type: 'remove',
-        payload: previousValue.description,
-      })
-      debug('remove on ph [%s]', handle)
     },
   }
 })()
@@ -253,7 +225,7 @@ export const start = (handle: ProcessHandle): void => {
 }
 
 export type InitializeOptions = {
-  sendToRenderer: SendToRenderer
+  sendToRenderer: sender.SendToRenderer
 }
 
 export const initialize = (options: InitializeOptions) => {

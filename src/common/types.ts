@@ -2,6 +2,12 @@ import { SpawnOptions } from 'child_process'
 
 export { SpawnOptions }
 
+// references: <https://github.com/acdlite/flux-standard-action>
+export type Action<Payload, Type = string> = Readonly<{
+  type: Type
+  payload: Payload
+}>
+
 export type ProcessHandle = string
 
 // serializable
