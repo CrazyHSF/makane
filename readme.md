@@ -1,13 +1,17 @@
 # makane
 
+[![Build Status][build-badge]][build-status]
+
 ## development
 
 ```bash
 DEBUG=makane:* yarn start
 ```
 
-## todo
+## references
 
-- [ ] performance monitoring
-- [ ] process logging
-- [ ] processes group
+- <https://github.com/electron-userland/electron-forge>
+- <https://ng-zorro.github.io>
+
+[build-badge]: https://img.shields.io/travis/airt/makane.svg
+[build-status]: https://travis-ci.org/airt/makane
