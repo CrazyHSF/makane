@@ -11,6 +11,7 @@ DEBUG=makane:* yarn start
 ## references
 
 - <https://github.com/electron-userland/electron-forge>
+- <https://electron.atom.io/docs>
 - <https://ng-zorro.github.io>
 
 [build-badge]: https://img.shields.io/travis/airt/makane.svg

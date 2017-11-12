@@ -4,9 +4,10 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
 import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
-import { AppService } from './app.service'
-import { ProcessViewRow } from './processes-table.component'
+import { PmService } from './pm.service'
+import { MessagesService } from './messages.service'
 import { CreateProcessOptions } from '../common/types'
+import { ProcessViewRow } from './processes-table.component'
 
 const debug = createDebug('makane:v:c:a')
 
@@ -40,7 +41,8 @@ export class AppComponent implements OnInit, OnDestroy {
   optionsArgsFormControlNames: ReadonlyArray<string>
 
   constructor(
-    private service: AppService,
+    private pm: PmService,
+    private messages: MessagesService,
     public detector: ChangeDetectorRef,
     private zone: NgZone,
     private formBuilder: FormBuilder,
@@ -49,18 +51,18 @@ export class AppComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.service.startObservingIpcMessages()
+    this.messages.startObservingIpcMessages()
     this.startHandlingProcessDescriptionMessages()
     this.reload()
     debug('component initialized')
   }
 
   ngOnDestroy() {
-    this.service.stopObservingIpcMessages()
+    this.messages.stopObservingIpcMessages()
   }
 
   reload() {
-    this.dataset = this.service.list().map(description => ({ description }))
+    this.dataset = this.pm.list().map(description => ({ description }))
   }
 
   buildFormGroup(): FormGroup {
@@ -84,12 +86,12 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   startHandlingProcessDescriptionMessages() {
-    this.service.observeProcessDescriptionCreateMessages.
+    this.messages.observeProcessDescriptionCreateMessages.
       subscribe(description => {
         this.dataset = this.dataset.concat([{ description }])
         debug('receive description create message (dataset -> %o): %o', this.dataset, description)
       })
-    this.service.observeProcessDescriptionRemoveMessages.
+    this.messages.observeProcessDescriptionRemoveMessages.
       subscribe(description => {
         this.zone.run(() => {
           this.dataset = this.dataset.filter(row =>
@@ -100,7 +102,7 @@ export class AppComponent implements OnInit, OnDestroy {
         })
         debug('receive description remove message (dataset -> %o): %o', this.dataset, description)
       })
-    this.service.observeProcessDescriptionUpdateMessages.
+    this.messages.observeProcessDescriptionUpdateMessages.
       subscribe(description => {
         this.zone.run(() => {
           this.dataset = this.dataset.map(row =>
@@ -113,7 +115,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onTClick() {
     debug('creating test process..')
-    this.service.create({
+    this.pm.create({
       name: 'bash-t',
       command: 'bash',
       args: ['test/loop.sh'],
@@ -149,7 +151,7 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       this.notification.success('Success', 'Create process successfully')
       debug('options: %o', options)
-      this.service.create(options)
+      this.pm.create(options)
       this.isCreateModalVisible = false
     }
   }

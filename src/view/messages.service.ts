@@ -1,33 +1,15 @@
 import * as createDebug from 'debug'
 import { Injectable } from '@angular/core'
-import { remote, ipcRenderer, Event } from 'electron'
 import { Subject, Subscription } from 'rxjs'
+import { ipcRenderer, Event } from 'electron'
 
-import { PM } from '../background/pm-type'
 import { actions, IPC_CHANNEL } from '../common/constants'
 import { Action, ProcessDescription, SpawnOptions } from '../common/types'
 
-const debug = createDebug('makane:v:s:a')
-
-// docs: <https://electron.atom.io/docs/api/remote/>
-const pm: PM = remote.getGlobal('pm')
+const debug = createDebug('makane:v:s:m')
 
 @Injectable()
-export class AppService {
-
-  list = pm.list
-
-  describe = pm.describe
-
-  create = pm.create
-
-  remove = pm.remove
-
-  restart = pm.start
-
-  start = pm.start
-
-  stop = pm.stop
+export class MessagesService {
 
   observeProcessDescriptionCreateMessages = new Subject<ProcessDescription>()
 

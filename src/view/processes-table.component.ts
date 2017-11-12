@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core'
 
-import { AppService } from './app.service'
+import { PmService } from './pm.service'
 import {
   ProcessHandle,
   ProcessStatus,
@@ -31,7 +31,7 @@ export class ProcessesTableComponent {
   @Output() pageSizeChange = new EventEmitter<number>()
 
   constructor(
-    private service: AppService,
+    private pm: PmService,
   ) { }
 
   onPageIndexChange(pageIndex: number) {
@@ -43,19 +43,19 @@ export class ProcessesTableComponent {
   }
 
   onRemove(handle: ProcessHandle) {
-    this.service.remove(handle)
+    this.pm.remove(handle)
   }
 
   onRestart(handle: ProcessHandle) {
-    this.service.restart(handle)
+    this.pm.restart(handle)
   }
 
   onStart(handle: ProcessHandle) {
-    this.service.start(handle)
+    this.pm.start(handle)
   }
 
   onStop(handle: ProcessHandle) {
-    this.service.stop(handle)
+    this.pm.stop(handle)
   }
 
   isOnline(status: ProcessStatus): boolean {

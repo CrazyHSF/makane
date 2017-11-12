@@ -53,6 +53,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "test": "echo todo",
     "lint": "tslint -p . 'src/**/*.ts'"
   }
 }
