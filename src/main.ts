@@ -1,4 +1,5 @@
 import * as createDebug from 'debug'
+import * as isDevMode from 'electron-is-dev'
 import { app, BrowserWindow } from 'electron'
 import { enableLiveReload } from 'electron-compile'
 import * as background from './background'
@@ -8,8 +9,6 @@ const debug = createDebug('makane:main')
 // Keep a global reference of the window object, if don't, the window will
 // be closed automatically when the JavaScript object is garbage collected
 let mainWindow: Electron.BrowserWindow | undefined
-
-const isDevMode = process.execPath.match(/[\\/]electron/)
 
 if (isDevMode) enableLiveReload()
 
