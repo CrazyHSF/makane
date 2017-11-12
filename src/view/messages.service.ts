@@ -11,23 +11,24 @@ const debug = createDebug('makane:v:s:m')
 @Injectable()
 export class MessagesService {
 
-  observeProcessDescriptionCreateMessages = new Subject<ProcessDescription>()
+  processDescriptionCreateMessages = new Subject<ProcessDescription>()
 
-  observeProcessDescriptionRemoveMessages = new Subject<ProcessDescription>()
+  processDescriptionRemoveMessages = new Subject<ProcessDescription>()
 
-  observeProcessDescriptionUpdateMessages = new Subject<ProcessDescription>()
+  processDescriptionUpdateMessages = new Subject<ProcessDescription>()
 
   private subscription = new Subscription()
 
   startObservingIpcMessages() {
     const listener = (event: Event, action: Action<any>) => {
+      debug('received ipc message { type = %o, payload = %o }', action.type, action.payload)
       switch (action.type) {
         case actions.PROCESS_DESCRIPTION_CREATE:
-          return this.observeProcessDescriptionCreateMessages.next(action.payload)
+          return this.processDescriptionCreateMessages.next(action.payload)
         case actions.PROCESS_DESCRIPTION_REMOVE:
-          return this.observeProcessDescriptionRemoveMessages.next(action.payload)
+          return this.processDescriptionRemoveMessages.next(action.payload)
         case actions.PROCESS_DESCRIPTION_UPDATE:
-          return this.observeProcessDescriptionUpdateMessages.next(action.payload)
+          return this.processDescriptionUpdateMessages.next(action.payload)
       }
     }
     ipcRenderer.on(IPC_CHANNEL, listener)

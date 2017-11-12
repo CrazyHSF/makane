@@ -75,7 +75,7 @@ export class AppComponent implements OnInit, OnDestroy {
   addArgsFormField(event?: MouseEvent) {
     if (event) event.preventDefault()
     const name = `args-${count()}`
-    this.optionsArgsFormControlNames = this.optionsArgsFormControlNames.concat([name])
+    this.optionsArgsFormControlNames = [...this.optionsArgsFormControlNames, name]
     this.optionsForm.addControl(name, new FormControl(undefined, Validators.required))
   }
 
@@ -86,31 +86,25 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   startHandlingProcessDescriptionMessages() {
-    this.messages.observeProcessDescriptionCreateMessages.
-      subscribe(description => {
-        this.dataset = this.dataset.concat([{ description }])
-        debug('receive description create message (dataset -> %o): %o', this.dataset, description)
+    this.messages.processDescriptionCreateMessages.subscribe(description => {
+      this.dataset = [...this.dataset, { description }]
+    })
+    this.messages.processDescriptionRemoveMessages.subscribe(description => {
+      this.zone.run(() => {
+        this.dataset = this.dataset.filter(row =>
+          row.description.handle !== description.handle
+        )
+        const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
+        if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
       })
-    this.messages.observeProcessDescriptionRemoveMessages.
-      subscribe(description => {
-        this.zone.run(() => {
-          this.dataset = this.dataset.filter(row =>
-            row.description.handle !== description.handle
-          )
-          const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
-          if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
-        })
-        debug('receive description remove message (dataset -> %o): %o', this.dataset, description)
+    })
+    this.messages.processDescriptionUpdateMessages.subscribe(description => {
+      this.zone.run(() => {
+        this.dataset = this.dataset.map(row =>
+          row.description.handle !== description.handle ? row : { ...row, description }
+        )
       })
-    this.messages.observeProcessDescriptionUpdateMessages.
-      subscribe(description => {
-        this.zone.run(() => {
-          this.dataset = this.dataset.map(row =>
-            row.description.handle !== description.handle ? row : { ...row, description }
-          )
-        })
-        debug('receive description update message (dataset -> %o): %o', this.dataset, description)
-      })
+    })
   }
 
   onTClick() {
@@ -135,12 +129,11 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onCancelCreate() {
-    debug('onCancelCreate')
     this.isCreateModalVisible = false
   }
 
   onCreate() {
-    debug('onCreate %o', this.optionsForm)
+    debug('options form %o', this.optionsForm)
     if (this.optionsForm.invalid) {
       this.message.warning(`Can't create process: invalid input`)
     } else {
