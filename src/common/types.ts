@@ -3,7 +3,7 @@ import { SpawnOptions } from 'child_process'
 export { SpawnOptions }
 
 // references: <https://github.com/acdlite/flux-standard-action>
-export type Action<Payload, Type = string> = Readonly<{
+export type Action<Payload, Type extends string = string> = Readonly<{
   type: Type
   payload: Payload
 }>
@@ -16,9 +16,7 @@ export type ProcessDescription = Readonly<{
   pid?: number
 
   name: string
-  command: string
-  args: Array<string>
-  spawnOptions?: SpawnOptions
+  options: ProcessOptions
 
   createTime: number
   startTime?: number
@@ -30,5 +28,10 @@ export type ProcessStatus =
   'uninitialized' | 'launching' | 'online' |
   'stopping' | 'stopped' | 'errored'
 
+export type ProcessOptions = Readonly<SpawnOptions & {
+  command: string
+  arguments: Array<string>
+}>
+
 export type CreateProcessOptions =
-  Pick<ProcessDescription, 'name' | 'command' | 'args' | 'spawnOptions'>
+  Pick<ProcessDescription, 'name' | 'options'>

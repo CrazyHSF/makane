@@ -11,8 +11,8 @@ import {
 } from '../common/types'
 
 const debug = createDebug('makane:b:pm')
-const warn = (formatter: string, ...args: Array<{}>) =>
-  debug('WARN: ' + formatter, ...args)
+const warn = (formatter: string, ...xs: Array<{}>) =>
+  debug('WARN: ' + formatter, ...xs)
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
 
@@ -173,7 +173,9 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
     return
   }
   const process = spawn(
-    description.command, description.args, description.spawnOptions
+    description.options.command,
+    description.options.arguments,
+    description.options,
   )
   internal.update(handle, {
     description: {

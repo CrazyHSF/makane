@@ -38,7 +38,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   optionsForm: FormGroup
 
-  optionsArgsFormControlNames: ReadonlyArray<string>
+  optionsArgumentsFormControlNames: ReadonlyArray<string>
 
   constructor(
     private pm: PmService,
@@ -72,16 +72,18 @@ export class AppComponent implements OnInit, OnDestroy {
     })
   }
 
-  addArgsFormField(event?: MouseEvent) {
+  addArgumentsFormField(event?: MouseEvent) {
     if (event) event.preventDefault()
-    const name = `args-${count()}`
-    this.optionsArgsFormControlNames = [...this.optionsArgsFormControlNames, name]
+    const name = `argument-${count()}`
+    this.optionsArgumentsFormControlNames =
+      [...this.optionsArgumentsFormControlNames, name]
     this.optionsForm.addControl(name, new FormControl(undefined, Validators.required))
   }
 
   detachArgFormField(name: string, event?: MouseEvent) {
     if (event) event.preventDefault()
-    this.optionsArgsFormControlNames = this.optionsArgsFormControlNames.filter(n => n !== name)
+    this.optionsArgumentsFormControlNames =
+      this.optionsArgumentsFormControlNames.filter(n => n !== name)
     this.optionsForm.removeControl(name)
   }
 
@@ -111,8 +113,10 @@ export class AppComponent implements OnInit, OnDestroy {
     debug('creating test process..')
     this.pm.create({
       name: 'bash-t',
-      command: 'bash',
-      args: ['test/loop.sh'],
+      options: {
+        command: 'bash',
+        arguments: ['test/loop.sh'],
+      },
     })
   }
 
@@ -124,7 +128,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   onPrepareCreate() {
     this.optionsForm = this.buildFormGroup()
-    this.optionsArgsFormControlNames = []
+    this.optionsArgumentsFormControlNames = []
     this.isCreateModalVisible = true
   }
 
@@ -137,10 +141,14 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.optionsForm.invalid) {
       this.message.warning(`Can't create process: invalid input`)
     } else {
+      const processArguments =
+        this.optionsArgumentsFormControlNames.map(n => this.optionsForm.value[n])
       const options: CreateProcessOptions = {
         name: this.optionsForm.value.name,
-        command: this.optionsForm.value.command,
-        args: this.optionsArgsFormControlNames.map(n => this.optionsForm.value[n]),
+        options: {
+          command: this.optionsForm.value.command,
+          arguments: processArguments,
+        },
       }
       this.notification.success('Success', 'Create process successfully')
       debug('options: %o', options)

@@ -33,10 +33,10 @@
       </td>
       <td nz-td>
         <nz-popover [nzTrigger]="'click'" [nzTitle]="'Arguments'">
-          <a nz-popover>{{row.description.command}}</a>
+          <a nz-popover>{{row.description.options.command}}</a>
           <ng-template #nzTemplate>
             <ul>
-              <li *ngFor="let arg of row.description.args">{{arg}}</li>
+              <li *ngFor="let x of row.description.options.arguments">{{x}}</li>
             </ul>
           </ng-template>
         </nz-popover>
