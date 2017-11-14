@@ -1,24 +1,24 @@
 <nz-layout class="layout">
   <nz-header>
     <div class="logo"></div>
-    <ul class="menu" nz-menu [nzTheme]="'dark'" [nzMode]="'horizontal'">
+    <ul class="menu" nz-menu nzTheme="dark" nzMode="horizontal">
       <li nz-menu-item>Home</li>
     </ul>
   </nz-header>
   <nz-content class="content-container">
     <div class="content">
       <div class="table-operations">
-        <button nz-button [nzType]="'default'" [nzShape]="'circle'" [nzLoading]="loading" (click)="onReload()">
+        <button nz-button nzType="default" nzShape="circle" [nzLoading]="loading" (click)="onReload()">
           <i class="anticon anticon-reload"></i>
         </button>
-        <button nz-button [nzType]="'default'" (click)="onPrepareCreate()">
+        <button nz-button nzType="default" (click)="onPrepareCreate()">
           Create
         </button>
-        <button nz-button [nzType]="'default'" (click)="onTClick()">
+        <button nz-button nzType="default" (click)="onTClick()">
           TC
         </button>
       </div>
-      <nz-modal [nzTitle]="'Create Process Modal'" [nzVisible]="isCreateModalVisible" [nzContent]="modalContent" (nzOnCancel)="onCancelCreate()" (nzOnOk)="onCreate()">
+      <nz-modal nzTitle="Create Process Modal" [nzVisible]="isCreateModalVisible" [nzContent]="modalContent" (nzOnCancel)="onCancelCreate()" (nzOnOk)="onCreate()">
         <ng-template #modalContent>
           <form nz-form class="create-form" *ngIf="isCreateModalVisible" [formGroup]="optionsForm" (ngSubmit)="onCreate()">
             <div nz-form-item nz-row>
@@ -26,7 +26,7 @@
                 <label for="name" nz-form-item-required>Name</label>
               </div>
               <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="optionsForm.controls['name']">
-                <nz-input formControlName="name" [nzId]="'name'"></nz-input>
+                <nz-input formControlName="name" nzId="name"></nz-input>
                 <div nz-form-explain *ngIf="optionsForm.controls['name'].dirty && optionsForm.controls['name'].hasError('required')">
                   Please input the name
                 </div>
@@ -37,7 +37,7 @@
                 <label for="command" nz-form-item-required>Command</label>
               </div>
               <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="optionsForm.controls['command']">
-                <nz-input formControlName="command" [nzId]="'command'"></nz-input>
+                <nz-input formControlName="command" nzId="command"></nz-input>
                 <div nz-form-explain *ngIf="optionsForm.controls['command'].dirty && optionsForm.controls['command'].hasError('required')">
                   Please input the command
                 </div>
@@ -57,10 +57,18 @@
             </div>
             <div nz-form-item nz-row>
               <div nz-form-control nz-col [nzSpan]="14" [nzOffset]="6">
-                <button nz-button style="width: 90%" [nzType]="'dashed'" (click)="addArgumentsFormField($event)">
+                <button nz-button style="width: 90%" nzType="dashed" (click)="addArgumentsFormField($event)">
                   <i class="anticon anticon-plus"></i>
                   <span>Add argument</span>
                 </button>
+              </div>
+            </div>
+            <div nz-form-item nz-row>
+              <div nz-form-label nz-col [nzSm]="6" [nzXs]="24">
+                <label for="cwd">Working Directory</label>
+              </div>
+              <div nz-form-control nz-col [nzSm]="14" [nzXs]="24" nzHasFeedback [nzValidateStatus]="optionsForm.controls['cwd']">
+                <nz-input formControlName="cwd" nzId="cwd" [nzPlaceHolder]="optionsFormDefaults.options?.cwd"></nz-input>
               </div>
             </div>
           </form>

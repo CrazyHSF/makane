@@ -1,4 +1,5 @@
 import * as delay from 'delay'
+import { resolve } from 'path'
 import * as createDebug from 'debug'
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
@@ -6,8 +7,8 @@ import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
 import { PmService } from './pm.service'
 import { MessagesService } from './messages.service'
-import { CreateProcessOptions } from '../common/types'
 import { ProcessViewRow } from './processes-table.component'
+import { RecursivePartial, CreateProcessOptions } from '../common/types'
 
 const debug = createDebug('makane:v:c:a')
 
@@ -37,6 +38,12 @@ export class AppComponent implements OnInit, OnDestroy {
   isCreateModalVisible: boolean = false
 
   optionsForm: FormGroup
+
+  optionsFormDefaults: RecursivePartial<CreateProcessOptions> = {
+    options: {
+      cwd: '/',
+    },
+  }
 
   optionsArgumentsFormControlNames: ReadonlyArray<string>
 
@@ -70,6 +77,7 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.formBuilder.group({
       name: [undefined, [Validators.required]],
       command: [undefined, [Validators.required]],
+      cwd: [undefined, []],
     })
   }
 
@@ -115,14 +123,16 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onTClick() {
-    debug('creating test process..')
-    this.pm.create({
+    const options: CreateProcessOptions = {
       name: 'bash-t',
       options: {
         command: 'bash',
-        arguments: ['test/loop.sh'],
+        arguments: [resolve(__dirname, '../..', 'test/loop.sh')],
+        cwd: '/',
       },
-    })
+    }
+    debug('create test process: %o', options)
+    this.pm.create(options)
   }
 
   onReload() {
@@ -153,13 +163,14 @@ export class AppComponent implements OnInit, OnDestroy {
         options: {
           command: this.optionsForm.value.command,
           arguments: processArguments,
+          cwd: this.optionsForm.value.cwd || this.optionsFormDefaults.options!.cwd,
         },
       }
       this.notification.success(
         'Success',
         `Create process ${options.name} successfully`,
       )
-      debug('options: %o', options)
+      debug('create process: %o', options)
       this.pm.create(options)
       this.isCreateModalVisible = false
     }
