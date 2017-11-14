@@ -14,8 +14,8 @@ if (isDevMode) enableLiveReload()
 
 const createMainWindow = () => {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: 1000,
+    height: 750,
   })
 
   mainWindow.loadURL(`file://${__dirname}/view/index.html`)

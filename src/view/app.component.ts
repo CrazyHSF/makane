@@ -93,13 +93,11 @@ export class AppComponent implements OnInit, OnDestroy {
       this.dataset = [...this.dataset, { description }]
     })
     this.messages.processDescriptionRemoveMessages.subscribe(description => {
-      this.zone.run(() => {
-        this.dataset = this.dataset.filter(row =>
-          row.description.handle !== description.handle
-        )
-        const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
-        if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
-      })
+      this.dataset = this.dataset.filter(row =>
+        row.description.handle !== description.handle
+      )
+      const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
+      if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
     })
     this.messages.processDescriptionUpdateMessages.subscribe(description => {
       this.zone.run(() => {
@@ -157,7 +155,10 @@ export class AppComponent implements OnInit, OnDestroy {
           arguments: processArguments,
         },
       }
-      this.notification.success('Success', 'Create process successfully')
+      this.notification.success(
+        'Success',
+        `Create process ${options.name} successfully`,
+      )
       debug('options: %o', options)
       this.pm.create(options)
       this.isCreateModalVisible = false
