@@ -33,5 +33,10 @@ export type ProcessOptions = Readonly<SpawnOptions & {
   arguments: Array<string>
 }>
 
+export type ProcessOutput = Readonly<{
+  handle: ProcessHandle
+  content: string
+}>
+
 export type CreateProcessOptions =
   Pick<ProcessDescription, 'name' | 'options'>

@@ -53,6 +53,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.messages.startObservingIpcMessages()
     this.startHandlingProcessDescriptionMessages()
+    this.startHandlingProcessOutputMessages()
     this.reload()
     debug('component initialized')
   }
@@ -106,6 +107,12 @@ export class AppComponent implements OnInit, OnDestroy {
           row.description.handle !== description.handle ? row : { ...row, description }
         )
       })
+    })
+  }
+
+  startHandlingProcessOutputMessages() {
+    this.messages.processOutputMessages.subscribe(({ handle, content }) => {
+      debug('output of ph [%s]: %o', handle, content)
     })
   }
 

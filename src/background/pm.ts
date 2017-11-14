@@ -120,16 +120,23 @@ const stopAndWait = async (handle: ProcessHandle): Promise<void> => {
     warn('stop on nonexistent ph [%s]', handle)
     return
   }
+
   const { description, process } = value
   if (!process) {
     warn('stop uninitialized process on ph [%s]', handle)
     return
   }
-  const shouldWait = ['launching', 'online'].includes(description.status)
-  const waiting = shouldWait ? waitForProcessEnd(process) : undefined
+
   killProcessInstance(process)
-  updateDescription(handle, { status: 'stopping' })
+
+  const isOnline = ['launching', 'online'].includes(description.status)
+  const waiting = isOnline ? waitForProcessEnd(process) : undefined
+  if (isOnline) {
+    updateDescription(handle, { status: 'stopping' })
+  }
+
   debug('stop process (pid = %d) on ph [%s]', process.pid, handle)
+
   return waiting
 }
 
@@ -167,16 +174,19 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
   await stopAndWait(handle).catch(error =>
     warn('error while stopping ph [%s]: %O', handle, error)
   )
+
   const description = describe(handle)
   if (!description) {
     warn('start on nonexistent ph [%s]', handle)
     return
   }
+
   const process = spawn(
     description.options.command,
     description.options.arguments,
     description.options,
   )
+
   internal.update(handle, {
     description: {
       ...description,
@@ -186,37 +196,29 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
     },
     process,
   })
+
   process.on('error', (error) => {
     debug('error on ph [%s]: %O', handle, error)
     updateErroredStatus(handle, process.pid)
   })
+
   process.on('exit', (code, signal) => {
     debug('exit on ph [%s]: (code = %d, signal = %s)', handle, code, signal)
     updateStoppedStatus(handle, process.pid)
   })
-  process.stdout.once('data', () => updateOnlineStatus(handle))
-  process.stderr.once('data', () => updateOnlineStatus(handle))
-  // TODO: listeners
-  // ↓↓↓↓↓
-  process.stdout.on('data', (chunk) => {
-    debug('stdout on ph [%s]: %o', handle, String(chunk))
-  })
-  process.stderr.on('data', (chunk) => {
-    debug('stderr on ph [%s]: %o', handle, String(chunk))
-  })
-  process.stdout.on('error', (error) => {
-    debug('error of stdout on ph [%s]: %O', handle, error)
-  })
-  process.stderr.on('error', (error) => {
-    debug('error of stderr on ph [%s]: %O', handle, error)
-  })
-  process.stdout.on('end', () => {
-    debug('end of stdout on ph [%s]', handle)
-  })
-  process.stderr.on('end', () => {
-    debug('end of stderr on ph [%s]', handle)
-  })
-  // ↑↑↑↑↑
+
+  const onceProcessOutput = () => updateOnlineStatus(handle)
+  process.stdout.once('data', onceProcessOutput)
+  process.stderr.once('data', onceProcessOutput)
+
+  const onProcessOutput = (chunk: Buffer | string) => {
+    const content = String(chunk)
+    debug('output of ph [%s]: %o', handle, content)
+    sender.sendProcessOutputMessage({ handle, content })
+  }
+  process.stdout.on('data', onProcessOutput)
+  process.stderr.on('data', onProcessOutput)
+
   debug('start process (pid = %d) on ph [%s]', process.pid, handle)
 }
 
