@@ -144,8 +144,10 @@ export class AppComponent implements OnInit, OnDestroy {
     this.messages.processOutputMessages.subscribe(({ handle, content }) => {
       const output = selectOutput(handle)
       if (output) {
-        appendContent(output, content)
-        limitLineCount(output, 1000)
+        this.zone.run(() => {
+          appendContent(output, content)
+          limitLineCount(output, 1000)
+        })
         debug('output of ph [%s] -> %o', handle, [...output.lines])
       }
     })

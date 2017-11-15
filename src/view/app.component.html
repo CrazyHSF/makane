@@ -20,7 +20,7 @@
       </div>
       <nz-modal nzTitle="Create Process Modal" [nzVisible]="isCreateModalVisible" [nzContent]="modalContent" (nzOnCancel)="onCancelCreate()" (nzOnOk)="onCreate()">
         <ng-template #modalContent>
-          <form nz-form class="create-form" *ngIf="isCreateModalVisible" [formGroup]="optionsForm" (ngSubmit)="onCreate()">
+          <form nz-form class="create-form" *ngIf="isCreateModalVisible" [formGroup]="optionsForm">
             <div nz-form-item nz-row>
               <div nz-form-label nz-col [nzSm]="6" [nzXs]="24">
                 <label for="name" nz-form-item-required>Name</label>

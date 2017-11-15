@@ -1,10 +1,11 @@
 <nz-table #nzTable [nzDataSource]="dataset" [nzPageIndex]="pageIndex" (nzPageIndexChange)="onPageIndexChange($event)" [nzPageSize]="pageSize" (nzPageSizeChange)="onPageSizeChange($event)" [nzLoading]="loading">
   <thead nz-thead>
     <tr>
-      <th nz-th nzWidth="20%"><span>Name</span></th>
-      <th nz-th nzWidth="20%"><span>Status</span></th>
-      <th nz-th nzWidth="20%"><span>Command</span></th>
-      <th nz-th><span>Action</span></th>
+      <th nz-th nzWidth="18%"><span>Name</span></th>
+      <th nz-th nzWidth="18%"><span>Status</span></th>
+      <th nz-th nzWidth="18%"><span>Command</span></th>
+      <th nz-th nzWidth="18%"><span>Output</span></th>
+      <th nz-th><span>Actions</span></th>
     </tr>
   </thead>
   <tbody nz-tbody>
@@ -32,14 +33,19 @@
         </nz-popover>
       </td>
       <td nz-td>
-        <nz-popover nzTrigger="click" nzTitle="Arguments">
+        <nz-popover nzTrigger="click" nzTitle="Options">
           <a nz-popover>{{row.description.options.command}}</a>
           <ng-template #nzTemplate>
             <ul>
+              <li>Working Directory: {{row.description.options.cwd}}</li>
+              <li>Arguments:</li>
               <li *ngFor="let x of row.description.options.arguments">{{x}}</li>
             </ul>
           </ng-template>
         </nz-popover>
+      </td>
+      <td nz-td>
+        <a>{{row.output.lines.length - 1}} lines</a>
       </td>
       <td nz-td>
         <span *ngIf="isOnline(row.description.status)">
