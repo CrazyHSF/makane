@@ -6,8 +6,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angula
 import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
 import { PmService } from './pm.service'
+import { ProcessViewData } from './view-types'
 import { MessagesService } from './messages.service'
-import { ProcessViewRow } from './processes-table.component'
 import { RecursivePartial, CreateProcessOptions } from '../common/types'
 
 const debug = createDebug('makane:v:c:a')
@@ -27,7 +27,7 @@ const count = (() => {
 })
 export class AppComponent implements OnInit, OnDestroy {
 
-  dataset: ReadonlyArray<ProcessViewRow> = []
+  dataset: ReadonlyArray<ProcessViewData> = []
 
   loading: boolean = false
 
@@ -101,16 +101,16 @@ export class AppComponent implements OnInit, OnDestroy {
       this.dataset = [...this.dataset, { description }]
     })
     this.messages.processDescriptionRemoveMessages.subscribe(description => {
-      this.dataset = this.dataset.filter(row =>
-        row.description.handle !== description.handle
+      this.dataset = this.dataset.filter(x =>
+        x.description.handle !== description.handle
       )
       const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
       if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
     })
     this.messages.processDescriptionUpdateMessages.subscribe(description => {
       this.zone.run(() => {
-        this.dataset = this.dataset.map(row =>
-          row.description.handle !== description.handle ? row : { ...row, description }
+        this.dataset = this.dataset.map(x =>
+          x.description.handle !== description.handle ? x : { ...x, description }
         )
       })
     })

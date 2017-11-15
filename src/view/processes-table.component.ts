@@ -1,15 +1,8 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core'
 
 import { PmService } from './pm.service'
-import {
-  ProcessHandle,
-  ProcessStatus,
-  ProcessDescription,
-} from '../common/types'
-
-export type ProcessViewRow = {
-  readonly description: ProcessDescription
-}
+import { ProcessViewData } from './view-types'
+import { ProcessHandle, ProcessStatus } from '../common/types'
 
 @Component({
   selector: 'processes-table',
@@ -18,7 +11,7 @@ export type ProcessViewRow = {
 })
 export class ProcessesTableComponent {
 
-  @Input() dataset: ReadonlyArray<ProcessViewRow>
+  @Input() dataset: ReadonlyArray<ProcessViewData>
 
   @Input() loading: boolean
 
