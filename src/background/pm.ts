@@ -178,45 +178,51 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
     return
   }
 
-  const process = spawn(
-    description.options.command,
-    description.options.arguments,
-    description.options,
-  )
+  try {
+    const process = spawn(
+      description.options.command,
+      description.options.arguments,
+      description.options,
+    )
 
-  internal.update(handle, {
-    description: {
-      ...description,
-      pid: process.pid,
-      startTime: now(),
-      status: 'launching',
-    },
-    process,
-  })
+    internal.update(handle, {
+      description: {
+        ...description,
+        pid: process.pid,
+        startTime: now(),
+        status: 'launching',
+      },
+      process,
+    })
 
-  process.on('error', (error) => {
-    debug('error on ph [%s]: %O', handle, error)
-    updateErroredStatus(handle, process.pid)
-  })
+    process.on('error', (error) => {
+      debug('error on ph [%s]: %O', handle, error)
+      updateErroredStatus(handle, process.pid)
+    })
 
-  process.on('exit', (code, signal) => {
-    debug('exit on ph [%s]: (code = %d, signal = %s)', handle, code, signal)
-    updateStoppedStatus(handle, process.pid)
-  })
+    process.on('exit', (code, signal) => {
+      debug('exit on ph [%s]: (code = %d, signal = %s)', handle, code, signal)
+      updateStoppedStatus(handle, process.pid)
+    })
 
-  const onceProcessOutput = () => updateOnlineStatus(handle)
-  process.stdout.once('data', onceProcessOutput)
-  process.stderr.once('data', onceProcessOutput)
+    const onceProcessOutput = () => updateOnlineStatus(handle)
+    process.stdout.once('data', onceProcessOutput)
+    process.stderr.once('data', onceProcessOutput)
 
-  const onProcessOutput = (chunk: Buffer | string) => {
-    const content = String(chunk)
-    debug('output of ph [%s]: %o', handle, content)
-    sender.sendProcessOutputMessage({ handle, content })
+    const onProcessOutput = (chunk: Buffer | string) => {
+      const content = String(chunk)
+      debug('output of ph [%s]: %o', handle, content)
+      sender.sendProcessOutputMessage({ handle, content })
+    }
+    process.stdout.on('data', onProcessOutput)
+    process.stderr.on('data', onProcessOutput)
+
+    debug('start process (pid = %d) of ph [%s]', process.pid, handle)
+
+  } catch (error) {
+    debug('caught error on ph [%s]: %O', handle, error)
+    updateDescription(handle, { status: 'errored', stopTime: now() })
   }
-  process.stdout.on('data', onProcessOutput)
-  process.stderr.on('data', onProcessOutput)
-
-  debug('start process (pid = %d) of ph [%s]', process.pid, handle)
 }
 
 export const start = (handle: ProcessHandle): void => {
