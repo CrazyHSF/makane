@@ -41,28 +41,28 @@ const internal = (() => {
     create: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
       if (previousValue) {
-        warn('create on existent ph [%s] %o', handle, value.description)
+        warn('conflict while creating ph [%s] %o', handle, value.description)
         return
       }
       storage.set(handle, value)
       sender.sendProcessDescriptionCreateMessage(value.description)
-      debug('create on ph [%s] %o', handle, value.description)
+      debug('create ph [%s] %o', handle, value.description)
     },
     remove: (handle: ProcessHandle) => {
       const previousValue = storage.get(handle)
       if (!previousValue) {
-        warn('remove on nonexistent ph [%s]', handle)
+        warn('remove nonexistent ph [%s]', handle)
         return
       }
       killProcessInstance(previousValue.process)
       storage.delete(handle)
       sender.sendProcessDescriptionRemoveMessage(previousValue.description)
-      debug('remove on ph [%s]', handle)
+      debug('remove ph [%s]', handle)
     },
     update: (handle: ProcessHandle, value: ProcessHandleValue) => {
       const previousValue = storage.get(handle)
       if (!previousValue) {
-        warn('update on nonexistent ph [%s] %o', handle, value.description)
+        warn('update nonexistent ph [%s] %o', handle, value.description)
         return
       }
       // delete or replace `process`
@@ -71,7 +71,7 @@ const internal = (() => {
       }
       storage.set(handle, value)
       sender.sendProcessDescriptionUpdateMessage(value.description)
-      debug('update on ph [%s] %o', handle, value.description)
+      debug('update ph [%s] %o', handle, value.description)
     },
   }
 })()
@@ -99,8 +99,8 @@ export const create = (options: CreateProcessOptions): ProcessHandle => {
   const description: ProcessDescription = {
     ...options,
     handle,
-    createTime: now(),
     status: 'uninitialized',
+    createTime: now(),
   }
   internal.create(handle, { description })
   return handle
@@ -117,15 +117,12 @@ const waitForProcessEnd = (process: ChildProcess) =>
 const stopAndWait = async (handle: ProcessHandle): Promise<void> => {
   const value = internal.select(handle)
   if (!value) {
-    warn('stop on nonexistent ph [%s]', handle)
+    warn('stop nonexistent ph [%s]', handle)
     return
   }
 
   const { description, process } = value
-  if (!process) {
-    warn('stop uninitialized process on ph [%s]', handle)
-    return
-  }
+  if (!process) return
 
   killProcessInstance(process)
 
@@ -135,7 +132,7 @@ const stopAndWait = async (handle: ProcessHandle): Promise<void> => {
     updateDescription(handle, { status: 'stopping' })
   }
 
-  debug('stop process (pid = %d) on ph [%s]', process.pid, handle)
+  debug('stop process (pid = %d) of ph [%s]', process.pid, handle)
 
   return waiting
 }
@@ -149,7 +146,7 @@ export const stop = (handle: ProcessHandle): void => {
 const updateErroredStatus = (handle: ProcessHandle, pid: number) => {
   un(describe(handle), description => {
     if (description.pid === pid) {
-      updateDescription(handle, { stopTime: now(), status: 'errored' })
+      updateDescription(handle, { status: 'errored', stopTime: now() })
     }
   })
 }
@@ -157,7 +154,7 @@ const updateErroredStatus = (handle: ProcessHandle, pid: number) => {
 const updateStoppedStatus = (handle: ProcessHandle, pid: number) => {
   un(describe(handle), description => {
     if (description.pid === pid) {
-      updateDescription(handle, { stopTime: now(), status: 'stopped' })
+      updateDescription(handle, { status: 'stopped', stopTime: now() })
     }
   })
 }
@@ -177,7 +174,7 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
 
   const description = describe(handle)
   if (!description) {
-    warn('start on nonexistent ph [%s]', handle)
+    warn('start nonexistent ph [%s]', handle)
     return
   }
 
@@ -219,7 +216,7 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
   process.stdout.on('data', onProcessOutput)
   process.stderr.on('data', onProcessOutput)
 
-  debug('start process (pid = %d) on ph [%s]', process.pid, handle)
+  debug('start process (pid = %d) of ph [%s]', process.pid, handle)
 }
 
 export const start = (handle: ProcessHandle): void => {
