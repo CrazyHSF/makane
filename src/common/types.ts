@@ -37,7 +37,7 @@ export type ProcessOptions = Readonly<SpawnOptions & {
   arguments: Array<string>
 }>
 
-export type ProcessOutput = Readonly<{
+export type ProcessOutputMessage = Readonly<{
   handle: ProcessHandle
   content: string
 }>

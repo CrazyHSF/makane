@@ -6,14 +6,14 @@ import { ipcRenderer, Event } from 'electron'
 import { actions, IPC_CHANNEL } from '../common/constants'
 import {
   Action,
-  ProcessOutput,
   ProcessDescription,
+  ProcessOutputMessage,
   SpawnOptions,
 } from '../common/types'
 
 const debug = createDebug('makane:v:s:m')
 
-type Payloads = ProcessDescription & ProcessOutput
+type Payloads = ProcessDescription & ProcessOutputMessage
 
 @Injectable()
 export class MessagesService {
@@ -24,7 +24,7 @@ export class MessagesService {
 
   processDescriptionUpdateMessages = new Subject<ProcessDescription>()
 
-  processOutputMessages = new Subject<ProcessOutput>()
+  processOutputMessages = new Subject<ProcessOutputMessage>()
 
   private subscription = new Subscription()
 

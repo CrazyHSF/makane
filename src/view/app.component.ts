@@ -1,3 +1,4 @@
+import { EOL } from 'os'
 import * as delay from 'delay'
 import { resolve } from 'path'
 import * as createDebug from 'debug'
@@ -6,9 +7,9 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angula
 import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
 import { PmService } from './pm.service'
-import { ProcessViewData } from './view-types'
 import { MessagesService } from './messages.service'
-import { RecursivePartial, CreateProcessOptions } from '../common/types'
+import { ProcessHandle, RecursivePartial, CreateProcessOptions } from '../common/types'
+import { ProcessViewData, ProcessViewOutput, emptyProcessViewOutput } from './view-types'
 
 const debug = createDebug('makane:v:c:a')
 
@@ -70,7 +71,10 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   reload() {
-    this.dataset = this.pm.list().map(description => ({ description }))
+    this.dataset = this.pm.list().map(description => ({
+      description,
+      output: emptyProcessViewOutput(),
+    }))
   }
 
   buildFormGroup(): FormGroup {
@@ -98,7 +102,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   startHandlingProcessDescriptionMessages() {
     this.messages.processDescriptionCreateMessages.subscribe(description => {
-      this.dataset = [...this.dataset, { description }]
+      this.dataset = [...this.dataset, {
+        description,
+        output: emptyProcessViewOutput(),
+      }]
     })
     this.messages.processDescriptionRemoveMessages.subscribe(description => {
       this.dataset = this.dataset.filter(x =>
@@ -117,8 +124,30 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   startHandlingProcessOutputMessages() {
+    const selectOutput = (handle: ProcessHandle) => {
+      const vd = this.dataset.find(x => x.description.handle === handle)
+      return vd ? vd.output : undefined
+    }
+    const appendContent = (output: ProcessViewOutput, content: string) => {
+      const previousLastLine = output.lines.pop()
+      const newLines = content.split(EOL)
+      newLines[0] = previousLastLine + newLines[0]
+      output.lines.push(...newLines)
+    }
+    const limitLineCount = (output: ProcessViewOutput, max: number) => {
+      const currentLineCount = output.lines.length
+      if (currentLineCount > max) {
+        const superfluousLineCount = currentLineCount - max
+        output.lines.splice(0, superfluousLineCount)
+      }
+    }
     this.messages.processOutputMessages.subscribe(({ handle, content }) => {
-      debug('output of ph [%s]: %o', handle, content)
+      const output = selectOutput(handle)
+      if (output) {
+        appendContent(output, content)
+        limitLineCount(output, 1000)
+        debug('output of ph [%s] -> %o', handle, [...output.lines])
+      }
     })
   }
 

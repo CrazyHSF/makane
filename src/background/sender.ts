@@ -2,8 +2,8 @@ import { actions, IPC_CHANNEL } from '../common/constants'
 import {
   Action,
   ProcessHandle,
-  ProcessOutput,
   ProcessDescription,
+  ProcessOutputMessage,
   SpawnOptions,
 } from '../common/types'
 
@@ -38,8 +38,8 @@ export const sendProcessDescriptionUpdateMessage = (description: ProcessDescript
   })
 }
 
-export const sendProcessOutputMessage = (output: ProcessOutput) => {
-  sendToRenderer<ProcessOutput>(IPC_CHANNEL, {
+export const sendProcessOutputMessage = (output: ProcessOutputMessage) => {
+  sendToRenderer<ProcessOutputMessage>(IPC_CHANNEL, {
     type: actions.PROCESS_OUTPUT,
     payload: output,
   })
