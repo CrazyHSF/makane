@@ -3,6 +3,7 @@ import * as createDebug from 'debug'
 import { spawn, ChildProcess } from 'child_process'
 
 import * as sender from './sender'
+import { now } from '../common/time'
 import {
   ProcessHandle,
   ProcessDescription,
@@ -15,8 +16,6 @@ const warn = (formatter: string, ...xs: Array<{}>) =>
   debug('WARN: ' + formatter, ...xs)
 
 // references: <https://github.com/unitech/pm2/blob/master/types/index.d.ts>
-
-const now = () => Math.floor(Date.now() / 1000)
 
 const un = <A, B>(x: A | undefined, f: (x: A) => B): B | undefined =>
   x === undefined ? undefined : f(x)

@@ -39,13 +39,24 @@
             <ul>
               <li>Working Directory: {{row.description.options.cwd}}</li>
               <li>Arguments:</li>
-              <li *ngFor="let x of row.description.options.arguments">{{x}}</li>
+              <li *ngFor="let x of row.description.options.arguments">&nbsp; {{x}}</li>
             </ul>
           </ng-template>
         </nz-popover>
       </td>
       <td nz-td>
-        <a>{{row.output.lines.length - 1}} lines</a>
+        <nz-popover nzTrigger="click" nzTitle="Output" nzPlacement="left">
+          <a nz-popover>
+            <div *ngIf="row.output.lastUpdateTime === 0; else nonempty">Empty</div>
+            <ng-template #nonempty>{{row.output.lastUpdateTime | amFromUnix | amCalendar}}</ng-template>
+          </a>
+          <ng-template #nzTemplate>
+            <ul>
+              <li *ngIf="row.output.lines.length > 20">..</li>
+              <li *ngFor="let x of row.output.lines.slice(-20)">{{x}}</li>
+            </ul>
+          </ng-template>
+        </nz-popover>
       </td>
       <td nz-td>
         <span *ngIf="isOnline(row.description.status)">

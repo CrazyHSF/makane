@@ -6,6 +6,7 @@ import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core'
 import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
+import { now } from '../common/time'
 import { PmService } from './pm.service'
 import { MessagesService } from './messages.service'
 import { ProcessHandle, DeepPartial, CreateProcessOptions } from '../common/types'
@@ -147,6 +148,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.zone.run(() => {
           appendContent(output, content)
           limitLineCount(output, 1000)
+          output.lastUpdateTime = now()
         })
         debug('output of ph [%s] -> %o', handle, [...output.lines])
       }
