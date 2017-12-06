@@ -8,7 +8,7 @@ import { NzMessageService, NzNotificationService } from 'ng-zorro-antd'
 
 import { PmService } from './pm.service'
 import { MessagesService } from './messages.service'
-import { ProcessHandle, RecursivePartial, CreateProcessOptions } from '../common/types'
+import { ProcessHandle, DeepPartial, CreateProcessOptions } from '../common/types'
 import { ProcessViewData, ProcessViewOutput, emptyProcessViewOutput } from './view-types'
 
 const debug = createDebug('makane:v:c:a')
@@ -40,7 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   optionsForm: FormGroup
 
-  optionsFormDefaults: RecursivePartial<CreateProcessOptions> = {
+  optionsFormDefaults: DeepPartial<CreateProcessOptions> = {
     options: {
       cwd: '/',
     },

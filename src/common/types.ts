@@ -2,8 +2,8 @@ import { SpawnOptions } from 'child_process'
 
 export { SpawnOptions }
 
-export type RecursivePartial<A> = {
-  [K in keyof A]?: RecursivePartial<A[K]>
+export type DeepPartial<A> = {
+  [K in keyof A]?: DeepPartial<A[K]>
 }
 
 // references: <https://github.com/acdlite/flux-standard-action>
