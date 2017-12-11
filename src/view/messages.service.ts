@@ -28,6 +28,20 @@ export class MessagesService {
 
   private subscription = new Subscription()
 
+  sendSaveProcessesSnapshotMessage() {
+    this.send({
+      type: actions.SAVE_PROCESSES_SNAPSHOT,
+      payload: undefined,
+    })
+  }
+
+  sendLoadProcessesSnapshotMessage() {
+    this.send({
+      type: actions.LOAD_PROCESSES_SNAPSHOT,
+      payload: undefined,
+    })
+  }
+
   startObservingIpcMessages() {
     const listener = (event: Event, action: Action<Payloads>) => {
       debug('received ipc message { type = %o, payload = %o }', action.type, action.payload)
@@ -49,6 +63,10 @@ export class MessagesService {
 
   stopObservingIpcMessages() {
     this.subscription.unsubscribe()
+  }
+
+  private send<A>(action: Action<A>) {
+    ipcRenderer.send(IPC_CHANNEL, action)
   }
 
 }

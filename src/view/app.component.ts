@@ -209,4 +209,12 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
+  onSaveProcessesSnapshot() {
+    this.messages.sendSaveProcessesSnapshotMessage()
+  }
+
+  onLoadProcessesSnapshot() {
+    this.messages.sendLoadProcessesSnapshotMessage()
+  }
+
 }

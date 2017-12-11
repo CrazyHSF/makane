@@ -17,6 +17,12 @@
         <button nz-button nzType="default" (click)="onTClick()">
           TC
         </button>
+        <button nz-button nzType="default" (click)="onSaveProcessesSnapshot()">
+          Save
+        </button>
+        <button nz-button nzType="default" (click)="onLoadProcessesSnapshot()">
+          Load
+        </button>
       </div>
       <nz-modal nzTitle="Create Process Modal" [nzVisible]="isCreateModalVisible" [nzContent]="modalContent" (nzOnCancel)="onCancelCreate()" (nzOnOk)="onCreate()">
         <ng-template #modalContent>
