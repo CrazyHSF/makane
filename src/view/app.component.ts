@@ -103,17 +103,21 @@ export class AppComponent implements OnInit, OnDestroy {
 
   startHandlingProcessDescriptionMessages() {
     this.messages.processDescriptionCreateMessages.subscribe(description => {
-      this.dataset = [...this.dataset, {
-        description,
-        output: emptyProcessViewOutput(),
-      }]
+      this.zone.run(() => {
+        this.dataset = [...this.dataset, {
+          description,
+          output: emptyProcessViewOutput(),
+        }]
+      })
     })
     this.messages.processDescriptionRemoveMessages.subscribe(description => {
-      this.dataset = this.dataset.filter(x =>
-        x.description.handle !== description.handle
-      )
-      const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
-      if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
+      this.zone.run(() => {
+        this.dataset = this.dataset.filter(x =>
+          x.description.handle !== description.handle
+        )
+        const maxPageIndex = Math.max(1, Math.ceil(this.dataset.length / this.pageSize))
+        if (this.pageIndex > maxPageIndex) { this.pageIndex = maxPageIndex }
+      })
     })
     this.messages.processDescriptionUpdateMessages.subscribe(description => {
       this.zone.run(() => {
