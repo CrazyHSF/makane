@@ -37,14 +37,7 @@ const createMainWindow = () => {
 // Some APIs can only be used after this event occurs
 app.on('ready', () => {
   background.initialize({
-    sendToRenderer: (channel, action) => {
-      if (mainWindow) {
-        mainWindow.webContents.send(channel, action)
-        // debug('send to renderer via channel [%s]: %s', channel, JSON.stringify(action, undefined, 2))
-      } else {
-        // debug('can not send to closed renderer with channel [%s]: %s', channel, JSON.stringify(action, undefined, 2))
-      }
-    }
+    getWebContents: () => mainWindow && mainWindow.webContents,
   })
   createMainWindow()
 })

@@ -230,12 +230,8 @@ export const start = (handle: ProcessHandle): void => {
   )
 }
 
-export type InitializeOptions = {
-  sendToRenderer: sender.SendToRenderer
-}
-
-export const initialize = (options: InitializeOptions) => {
-  sender.setSendToRenderer(options.sendToRenderer)
+export const initialize = () => {
+  debug('initialized')
 }
 
 export const terminate = () => {

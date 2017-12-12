@@ -1,46 +1,62 @@
+import * as createDebug from 'debug'
+import { WebContents } from 'electron'
+
 import { actions, IPC_CHANNEL } from '../common/constants'
 import {
   Action,
-  ProcessHandle,
   ProcessDescription,
   ProcessOutputMessage,
   SpawnOptions,
 } from '../common/types'
 
-export type SendToRenderer = <A>(channel: string, action: Action<A>) => void
+const debug = createDebug('makane:b:sender')
 
-let sendToRenderer: SendToRenderer = () => {
-  throw new Error('uninitialized `sendToRenderer`')
+let getWebContents = (): WebContents | undefined => {
+  throw new Error('uninitialized `getWebContents`')
 }
 
-export const setSendToRenderer = (send: SendToRenderer) => {
-  sendToRenderer = send
+const send = <A>(action: Action<A>) => {
+  const webContents = getWebContents()
+  if (webContents) {
+    webContents.send(IPC_CHANNEL, action)
+    // debug('send to renderer: %s', JSON.stringify(action, undefined, 2))
+  } else {
+    // debug('can not send to closed renderer: %s', JSON.stringify(action, undefined, 2))
+  }
 }
 
 export const sendProcessDescriptionCreateMessage = (description: ProcessDescription) => {
-  sendToRenderer<ProcessDescription>(IPC_CHANNEL, {
+  send({
     type: actions.PROCESS_DESCRIPTION_CREATE,
     payload: description,
   })
 }
 
 export const sendProcessDescriptionRemoveMessage = (description: ProcessDescription) => {
-  sendToRenderer<ProcessDescription>(IPC_CHANNEL, {
+  send({
     type: actions.PROCESS_DESCRIPTION_REMOVE,
     payload: description,
   })
 }
 
 export const sendProcessDescriptionUpdateMessage = (description: ProcessDescription) => {
-  sendToRenderer<ProcessDescription>(IPC_CHANNEL, {
+  send({
     type: actions.PROCESS_DESCRIPTION_UPDATE,
     payload: description,
   })
 }
 
 export const sendProcessOutputMessage = (output: ProcessOutputMessage) => {
-  sendToRenderer<ProcessOutputMessage>(IPC_CHANNEL, {
+  send({
     type: actions.PROCESS_OUTPUT,
     payload: output,
   })
+}
+
+export type InitializeOptions = {
+  getWebContents: () => WebContents | undefined
+}
+
+export const initialize = (options: InitializeOptions) => {
+  getWebContents = options.getWebContents
 }

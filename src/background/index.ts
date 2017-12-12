@@ -1,15 +1,17 @@
 import * as createDebug from 'debug'
 
 import * as pm from './pm'
+import * as sender from './sender'
 import * as listener from './listener'
 
 const debug = createDebug('makane:b')
 
-export type InitializeOptions = pm.InitializeOptions
+export type InitializeOptions = sender.InitializeOptions
 
 export const initialize = (options: InitializeOptions) => {
   listener.initialize()
-  pm.initialize(options)
+  sender.initialize(options)
+  pm.initialize()
   global['pm'] = pm
   debug('initialized')
 }

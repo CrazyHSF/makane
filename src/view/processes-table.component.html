@@ -47,7 +47,7 @@
       <td nz-td>
         <nz-popover nzTrigger="click" nzTitle="Output" nzPlacement="left">
           <a nz-popover>
-            <div *ngIf="row.output.lastUpdateTime === 0; else nonempty">Empty</div>
+            <div *ngIf="row.output.lastUpdateTime === 0; else nonempty">None</div>
             <ng-template #nonempty>{{row.output.lastUpdateTime | amFromUnix | amCalendar}}</ng-template>
           </a>
           <ng-template #nzTemplate>
