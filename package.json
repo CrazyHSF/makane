@@ -49,19 +49,20 @@
     "electron-forge": "^4.0.0",
     "electron-prebuilt-compile": "1.7.9",
     "pre-commit": "^1.0.0",
+    "prettier": "~1.9.0",
     "tslint": "^5.0.0",
+    "tslint-config-prettier": "^1.0.0",
     "tslint-config-standard": "^7.0.0",
+    "tslint-plugin-prettier": "^1.0.0",
     "typescript": "^2.0.0"
   },
-  "pre-commit": [
-    "lint"
-  ],
+  "pre-commit": ["lint"],
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "test": "echo todo",
-    "lint": "tslint -p . 'src/**/*.ts'"
+    "lint": "tslint -p . -t verbose"
   }
 }
