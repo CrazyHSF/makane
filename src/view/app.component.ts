@@ -1,5 +1,4 @@
 import { EOL } from 'os'
-import * as delay from 'delay'
 import { resolve } from 'path'
 import * as createDebug from 'debug'
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms'

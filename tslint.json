@@ -1,30 +1,9 @@
-// https://palantir.github.io/tslint/rules/
-// https://github.com/blakeembrey/tslint-config-standard/blob/master/tslint.js
 {
-  "extends": ["tslint-config-standard", "tslint-config-prettier"],
-  "rulesDirectory": ["tslint-plugin-prettier"],
+  "extends": "tslint-config-levi",
   "rules": {
-    "prettier": true,
-    // ↓ additional rules
-    "array-type": [true, "generic"],
-    "indent": [true, "spaces"],
-    "linebreak-style": [true, "LF"],
-    "no-angle-bracket-type-assertion": [true],
-    "only-arrow-functions": [true],
-    "prefer-const": [true],
-    // ↓ overridden rules
-    "no-unused-variable": [false],
-    "quotemark": [true, "single", "jsx-double", "avoid-escape"],
-    "space-before-function-paren": [true, {
-      "anonymous": "always",
-      "asyncArrow": "always",
-      "constructor": "never",
-      "method": "never",
-      "named": "never"
-    }],
-    "trailing-comma": [false, {
-      "multiline": "always",
-      "singleline": "never"
-    }]
+    "no-unused-variable": {
+      "severity": "warning",
+      "options": { "ignore-pattern": "debug|SpawnOptions" }
+    }
   }
 }
