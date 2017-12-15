@@ -25,21 +25,27 @@ const send = <A>(action: Action<A>) => {
   }
 }
 
-export const sendProcessDescriptionCreateMessage = (description: ProcessDescription) => {
+export const sendProcessDescriptionCreateMessage = (
+  description: ProcessDescription,
+) => {
   send({
     type: actions.PROCESS_DESCRIPTION_CREATE,
     payload: description,
   })
 }
 
-export const sendProcessDescriptionRemoveMessage = (description: ProcessDescription) => {
+export const sendProcessDescriptionRemoveMessage = (
+  description: ProcessDescription,
+) => {
   send({
     type: actions.PROCESS_DESCRIPTION_REMOVE,
     payload: description,
   })
 }
 
-export const sendProcessDescriptionUpdateMessage = (description: ProcessDescription) => {
+export const sendProcessDescriptionUpdateMessage = (
+  description: ProcessDescription,
+) => {
   send({
     type: actions.PROCESS_DESCRIPTION_UPDATE,
     payload: description,

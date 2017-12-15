@@ -10,7 +10,6 @@ import { ProcessHandle, ProcessStatus } from '../common/types'
   styleUrls: ['./processes-table.component.css'],
 })
 export class ProcessesTableComponent {
-
   @Input() dataset: ReadonlyArray<ProcessViewData>
 
   @Input() loading: boolean
@@ -23,9 +22,7 @@ export class ProcessesTableComponent {
 
   @Output() pageSizeChange = new EventEmitter<number>()
 
-  constructor(
-    private pm: PmService,
-  ) { }
+  constructor(private pm: PmService) {}
 
   onPageIndexChange(pageIndex: number) {
     this.pageIndexChange.emit(pageIndex)
@@ -52,17 +49,17 @@ export class ProcessesTableComponent {
   }
 
   isOnline(status: ProcessStatus): boolean {
-    const statuses: Array<ProcessStatus> = [
-      'launching', 'online',
-    ]
+    const statuses: Array<ProcessStatus> = ['launching', 'online']
     return statuses.includes(status)
   }
 
   isOffline(status: ProcessStatus): boolean {
     const statuses: Array<ProcessStatus> = [
-      'uninitialized', 'stopping', 'stopped', 'errored',
+      'uninitialized',
+      'stopping',
+      'stopped',
+      'errored',
     ]
     return statuses.includes(status)
   }
-
 }

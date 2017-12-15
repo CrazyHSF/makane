@@ -78,10 +78,15 @@ const internal = (() => {
 export const list = (): Array<ProcessDescription> =>
   internal.list().map(([handle, { description }]) => description)
 
-export const describe = (handle: ProcessHandle): ProcessDescription | undefined =>
+export const describe = (
+  handle: ProcessHandle,
+): ProcessDescription | undefined =>
   un(internal.select(handle), v => v.description)
 
-const updateDescription = (handle: ProcessHandle, partialDescription: Partial<ProcessDescription>) => {
+const updateDescription = (
+  handle: ProcessHandle,
+  partialDescription: Partial<ProcessDescription>,
+) => {
   un(internal.select(handle), v => {
     internal.update(handle, {
       ...v,
@@ -138,7 +143,7 @@ const stopAndWait = async (handle: ProcessHandle): Promise<void> => {
 
 export const stop = (handle: ProcessHandle): void => {
   stopAndWait(handle).catch(error =>
-    warn('error while stopping ph [%s]: %O', handle, error)
+    warn('error while stopping ph [%s]: %O', handle, error),
   )
 }
 
@@ -168,7 +173,7 @@ const updateOnlineStatus = (handle: ProcessHandle) => {
 
 const startAndWait = async (handle: ProcessHandle): Promise<void> => {
   await stopAndWait(handle).catch(error =>
-    warn('error while stopping ph [%s]: %O', handle, error)
+    warn('error while stopping ph [%s]: %O', handle, error),
   )
 
   const description = describe(handle)
@@ -194,7 +199,7 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
       process,
     })
 
-    process.on('error', (error) => {
+    process.on('error', error => {
       debug('error on ph [%s]: %O', handle, error)
       updateErroredStatus(handle, process.pid)
     })
@@ -217,7 +222,6 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
     process.stderr.on('data', onProcessOutput)
 
     debug('start process (pid = %d) of ph [%s]', process.pid, handle)
-
   } catch (error) {
     debug('caught error on ph [%s]: %O', handle, error)
     updateDescription(handle, { status: 'errored', stopTime: now() })
@@ -226,7 +230,7 @@ const startAndWait = async (handle: ProcessHandle): Promise<void> => {
 
 export const start = (handle: ProcessHandle): void => {
   startAndWait(handle).catch(error =>
-    warn('error while starting ph [%s]: %O', handle, error)
+    warn('error while starting ph [%s]: %O', handle, error),
   )
 }
 
@@ -235,7 +239,6 @@ export const initialize = () => {
 }
 
 export const terminate = () => {
-  internal.list().
-    map(([handle, { process }]) => process).
-    forEach(killProcessInstance)
+  const pairs = internal.list()
+  pairs.map(([handle, { process }]) => process).forEach(killProcessInstance)
 }

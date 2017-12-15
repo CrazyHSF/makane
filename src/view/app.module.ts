@@ -14,10 +14,7 @@ import { ProcessesTableComponent } from './processes-table.component'
 const NgZorroLocale = { provide: NZ_LOCALE, useValue: enUS }
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    ProcessesTableComponent,
-  ],
+  declarations: [AppComponent, ProcessesTableComponent],
   imports: [
     FormsModule,
     MomentModule,
@@ -26,11 +23,7 @@ const NgZorroLocale = { provide: NZ_LOCALE, useValue: enUS }
     BrowserAnimationsModule,
     NgZorroAntdModule.forRoot(),
   ],
-  providers: [
-    PmService,
-    NgZorroLocale,
-    MessagesService,
-  ],
+  providers: [PmService, NgZorroLocale, MessagesService],
   bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

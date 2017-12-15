@@ -17,7 +17,6 @@ type Payloads = ProcessDescription & ProcessOutputMessage
 
 @Injectable()
 export class MessagesService {
-
   processDescriptionCreateMessages = new Subject<ProcessDescription>()
 
   processDescriptionRemoveMessages = new Subject<ProcessDescription>()
@@ -44,7 +43,11 @@ export class MessagesService {
 
   startObservingIpcMessages() {
     const listener = (event: Event, action: Action<Payloads>) => {
-      debug('received ipc message { type = %o, payload = %o }', action.type, action.payload)
+      debug(
+        'received ipc message { type = %o, payload = %o }',
+        action.type,
+        action.payload,
+      )
       switch (action.type) {
         case actions.PROCESS_DESCRIPTION_CREATE:
           return this.processDescriptionCreateMessages.next(action.payload)
@@ -57,7 +60,9 @@ export class MessagesService {
       }
     }
     ipcRenderer.on(IPC_CHANNEL, listener)
-    this.subscription.add(() => ipcRenderer.removeListener(IPC_CHANNEL, listener))
+    this.subscription.add(() =>
+      ipcRenderer.removeListener(IPC_CHANNEL, listener),
+    )
     debug('start observing ipc messages')
   }
 
@@ -68,5 +73,4 @@ export class MessagesService {
   private send<A>(action: Action<A>) {
     ipcRenderer.send(IPC_CHANNEL, action)
   }
-
 }

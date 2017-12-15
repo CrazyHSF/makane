@@ -63,6 +63,7 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "test": "echo todo",
-    "lint": "tslint -p . -t verbose"
+    "lint": "tslint -p . -t verbose",
+    "prettify": "prettier --write 'src/**/*.ts'"
   }
 }

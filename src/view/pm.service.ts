@@ -12,7 +12,6 @@ const pm: PM = remote.getGlobal('pm')
 
 @Injectable()
 export class PmService {
-
   list = pm.list
 
   describe = pm.describe
@@ -26,5 +25,4 @@ export class PmService {
   start = pm.start
 
   stop = pm.stop
-
 }

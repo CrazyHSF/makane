@@ -2,9 +2,7 @@ import { SpawnOptions } from 'child_process'
 
 export { SpawnOptions }
 
-export type DeepPartial<A> = {
-  [K in keyof A]?: DeepPartial<A[K]>
-}
+export type DeepPartial<A> = { [K in keyof A]?: DeepPartial<A[K]> }
 
 // references: <https://github.com/acdlite/flux-standard-action>
 export type Action<Payload, Type extends string = string> = Readonly<{
@@ -29,18 +27,23 @@ export type ProcessDescription = Readonly<{
 }>
 
 export type ProcessStatus =
-  'uninitialized' | 'launching' | 'online' |
-  'stopping' | 'stopped' | 'errored'
+  | 'uninitialized'
+  | 'launching'
+  | 'online'
+  | 'stopping'
+  | 'stopped'
+  | 'errored'
 
-export type ProcessOptions = Readonly<SpawnOptions & {
-  command: string
-  arguments: Array<string>
-}>
+export type ProcessOptions = Readonly<
+  SpawnOptions & {
+    command: string
+    arguments: Array<string>
+  }
+>
 
 export type ProcessOutputMessage = Readonly<{
   handle: ProcessHandle
   content: string
 }>
 
-export type CreateProcessOptions =
-  Pick<ProcessDescription, 'name' | 'options'>
+export type CreateProcessOptions = Pick<ProcessDescription, 'name' | 'options'>

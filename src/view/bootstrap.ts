@@ -7,4 +7,5 @@ if (!isDevMode) enableProdMode()
 
 localStorage.debug = 'makane:*'
 
-platformBrowserDynamic().bootstrapModule(AppModule).catch(e => console.error(e))
+// tslint:disable-next-line: no-floating-promises
+platformBrowserDynamic().bootstrapModule(AppModule)
