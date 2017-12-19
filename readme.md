@@ -15,7 +15,7 @@ DEBUG=makane:* yarn start
 - <https://electron.atom.io/docs>
 - <https://ng-zorro.github.io>
 
-[build-badge]: https://img.shields.io/travis/airt/makane.svg
-[build-status]: https://travis-ci.org/airt/makane
+[build-badge]: https://img.shields.io/travis/ridelab/makane.svg
+[build-status]: https://travis-ci.org/ridelab/makane
 [prettier-badge]: https://img.shields.io/badge/code_style-prettier-ff69b4.svg
 [prettier-github]: https://github.com/prettier/prettier
