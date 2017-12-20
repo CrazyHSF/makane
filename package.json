@@ -34,6 +34,7 @@
     "electron-devtools-installer": "^2.0.0",
     "electron-is-dev": "^0.3.0",
     "electron-squirrel-startup": "^1.0.0",
+    "electron-unhandled": "^1.0.0",
     "lodash": "^4.0.0",
     "moment": "^2.0.0",
     "mz": "^2.0.0",
