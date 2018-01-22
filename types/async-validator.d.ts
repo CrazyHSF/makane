@@ -11,5 +11,7 @@ declare module 'async-validator' {
     validate<A>(source: A, callback: ValidateCallback): void
   }
 
+  namespace Validator {}
+
   export = Validator
 }
